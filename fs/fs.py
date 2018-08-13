@@ -1,11 +1,23 @@
 def main():
-    router = Router()
-    router.add('place/here', 'this is here')
-    router.add('place/there', 'this is there')
-    router.add('place/:any', 'this is anywhere!')
+    fs = FileSystem()
+    fs.onread('place/here', lambda: 'this is here')
+    fs.onread('place/there', lambda: 'this is there')
+    fs.onread('place/:any', lambda params: 'this is ' + params['any'] + '!')
 
-    result = router.lookup('place/unknown')
-    print(result.data, result.parameters)
+    result = fs.read('place/unknown')
+    print(result)
+
+class FileSystem:
+    def __init__(self):
+        self.router = Router()
+
+    def onread(self, route, callback):
+        self.router.add(route, callback)
+
+    def read(self, route):
+        result = self.router.lookup(route)
+        if result:
+            return result.data(result.parameters)
 
 class Router:
     def __init__(self):
