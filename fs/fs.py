@@ -1,5 +1,7 @@
 from . import router
 
+import os.path
+
 def main():
     fs = FileSystem()
     fs.onread('place/here', lambda: 'this is here')
@@ -13,10 +15,13 @@ class FileSystem:
     def __init__(self):
         self.router = router.Router()
 
-    def onread(self, route, callback):
+    def onread(self, path, callback):
+        route = os.path.normpath(path)
         self.router.add(route, callback)
 
-    def read(self, route):
+    def read(self, path):
+        route = os.path.normpath(path)
+
         result = self.router.lookup(route)
         if result:
             return result.data(result.parameters)
