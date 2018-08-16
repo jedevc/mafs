@@ -3,7 +3,7 @@ import fuse
 from . import filesystem
 
 def main():
-    fs = FS()
+    fs = QuickFS()
 
     @fs.read('/place/here')
     def place_here(ps):
@@ -19,7 +19,7 @@ def main():
 
     fs.mount('test')
 
-class FS:
+class QuickFS:
     def __init__(self):
         self.fs = filesystem.FileSystem()
 
