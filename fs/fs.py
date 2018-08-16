@@ -11,12 +11,36 @@ import fuse
 import time
 
 def main():
-    fs = FileSystem()
-    fs.onread('/place/here', lambda ps: 'this is here\n')
-    fs.onread('/place/there', lambda ps: 'this is there\n')
-    fs.onread('/place/:any', lambda ps: 'this is ' + ps['any'] + '!\n')
+    fs = FS()
 
-    fuse.FUSE(fs, 'test', raw_fi=True, nothreads=True, foreground=True)
+    @fs.read('/place/here')
+    def place_here(ps):
+        return 'this is here\n'
+
+    @fs.read('/place/there')
+    def place_here(ps):
+        return 'this is there\n'
+
+    @fs.read('/place/:any')
+    def place_here(ps):
+        return 'this is ' + ps['any'] + '!\n'
+
+    fs.mount('test')
+
+class FS:
+    def __init__(self):
+        self.fs = FileSystem()
+
+    def mount(self, mountpoint):
+        fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=True, foreground=True)
+
+    def read(self, route):
+        def decorator(func):
+            self.fs.onread(route, func)
+            def wrapper(*args, **kwargs):
+                pass
+            return wrapper
+        return decorator
 
 class FileSystem(fuse.Operations):
     def __init__(self):
