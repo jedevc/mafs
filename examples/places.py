@@ -14,4 +14,4 @@ def place_here(ps):
 def place_here(ps):
     return 'this is ' + ps['any'] + '!\n'
 
-fs.mount('test')
+fs.run()
