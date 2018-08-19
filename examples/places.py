@@ -12,6 +12,6 @@ def place_here(ps):
 
 @fs.read('/place/:any')
 def place_here(ps):
-    return 'this is ' + ps['any'] + '!\n'
+    return 'this is ' + ps.any + '!\n'
 
 fs.run()

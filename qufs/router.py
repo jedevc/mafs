@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 class Router:
     def __init__(self):
         self.final = None
@@ -62,7 +64,12 @@ class Result:
     def __init__(self, data):
         self.data = data
 
-        self.parameters = {}
+        self._parameters = {}
     
     def parameter(self, param, data):
-        self.parameters[param] = data
+        self._parameters[param] = data
+
+    @property
+    def parameters(self):
+        Parameters = namedtuple('Parameters', self._parameters.keys())
+        return Parameters(**self._parameters)
