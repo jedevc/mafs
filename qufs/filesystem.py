@@ -85,11 +85,11 @@ class FileSystem(fuse.Operations):
         if fi.fh not in self.contents:
             result = self.router.lookup(path)
             if result:
-                s = result.data(path, result.parameters)
-                self.contents[fi.fh] = s.encode('utf-8')
+                reader = Reader(result.data(path, result.parameters))
+                self.contents[fi.fh] = reader
             else: return
 
-        buf = self.contents[fi.fh][offset:offset + length]
+        buf = self.contents[fi.fh].read(length, offset)
         if buf:
             return buf
         else:
@@ -106,3 +106,21 @@ class FileSystem(fuse.Operations):
 
     def onread(self, path, callback):
         self.router.add(path, callback)
+
+class Reader:
+    def __init__(self, contents):
+        try:
+            self.contents = iter(contents)
+            self.cache = bytes()
+        except TypeError:
+            self.cache = self.contents
+            self.contents = None
+
+    def read(self, length, offset):
+        while self.contents and len(self.cache) < offset + length:
+            try:
+                self.cache += next(self.contents).encode('utf-8')
+            except StopIteration:
+                self.contents = None
+
+        return self.cache[offset:offset + length]
