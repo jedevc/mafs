@@ -85,7 +85,7 @@ class FileSystem(fuse.Operations):
         if fi.fh not in self.contents:
             result = self.router.lookup(path)
             if result:
-                s = result.data(result.parameters)
+                s = result.data(path, result.parameters)
                 self.contents[fi.fh] = s.encode('utf-8')
             else: return
 
