@@ -21,11 +21,26 @@ class QuickFS:
         fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=not threads,
                 foreground=foreground)
 
+    # Callbacks
+    # =========
+
     def onread(self, route, func):
         self.fs.onread(route, func)
+
+    def onreadlink(self, route, func):
+        self.fs.onreadlink(route, func)
+
+    # Callbacks (decorators)
+    # ======================
 
     def read(self, route):
         def decorator(func):
             self.onread(route, func)
+            return lambda *args, **kwargs: None
+        return decorator
+
+    def readlink(self, route):
+        def decorator(func):
+            self.onreadlink(route, func)
             return lambda *args, **kwargs: None
         return decorator

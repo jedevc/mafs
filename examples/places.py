@@ -14,4 +14,8 @@ def place_here(path, ps):
 def place_here(path, ps):
     return 'this is ' + ps.any + '!\n'
 
+@fs.readlink('/shortcut')
+def shortcut(path, ps):
+    return './place/a quicker way'
+
 fs.run()

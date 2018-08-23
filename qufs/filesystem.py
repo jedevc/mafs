@@ -56,7 +56,11 @@ class FileSystem(fuse.Operations):
 
         return dirs
 
-    # def readlink(self, path): pass
+    def readlink(self, path):
+        result = self.router.lookup(path)
+        if result:
+            return result.data.callback(path, result.parameters)
+
     # def mknod(self, path, mode, dev): pass
     # def rmdir(self, path): pass
     # def mkdir(self, path, mode): pass
@@ -106,6 +110,10 @@ class FileSystem(fuse.Operations):
 
     def onread(self, path, callback):
         f = File(callback)
+        self.router.add(path, f)
+
+    def onreadlink(self, path, callback):
+        f = File(callback, st.S_IFLNK)
         self.router.add(path, f)
 
 class File:
