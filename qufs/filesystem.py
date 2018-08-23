@@ -108,8 +108,8 @@ class FileSystem(fuse.Operations):
     # Callbacks
     # =========
 
-    def onread(self, path, callback):
-        f = File(callback)
+    def onread(self, path, callback, encoding='utf-8'):
+        f = File(callback, encoding=encoding)
         self.router.add(path, f)
 
     def onreadlink(self, path, callback):
@@ -117,22 +117,24 @@ class FileSystem(fuse.Operations):
         self.router.add(path, f)
 
 class File:
-    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o660):
+    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o660, encoding='utf-8'):
         self.callback = callback
 
         self.ftype = ftype
         self.permissions = permissions
+
+        self.encoding = encoding
 
     @property
     def mode(self):
         return self.ftype | self.permissions
 
     def open(self, *args):
-        return OpenFile(self.callback, self.ftype, self.permissions, args)
+        return OpenFile(self.callback, self.ftype, self.permissions, self.encoding, args)
 
 class OpenFile(File):
-    def __init__(self, callback, ftype, permissions, args):
-        super().__init__(callback, ftype, permissions)
+    def __init__(self, callback, ftype, permissions, encoding, args):
+        super().__init__(callback, ftype, permissions, encoding)
 
         contents = self.callback(*args)
         try:
@@ -145,7 +147,10 @@ class OpenFile(File):
     def read(self, length, offset):
         while self.contents and len(self.cache) < offset + length:
             try:
-                self.cache += next(self.contents).encode('utf-8')
+                part = next(self.contents)
+                if self.encoding:
+                    part = part.encode(self.encoding)
+                self.cache += part
             except StopIteration:
                 self.contents = None
 

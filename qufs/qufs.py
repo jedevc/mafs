@@ -24,8 +24,8 @@ class QuickFS:
     # Callbacks
     # =========
 
-    def onread(self, route, func):
-        self.fs.onread(route, func)
+    def onread(self, route, func, encoding='utf-8'):
+        self.fs.onread(route, func, encoding)
 
     def onreadlink(self, route, func):
         self.fs.onreadlink(route, func)
@@ -33,9 +33,9 @@ class QuickFS:
     # Callbacks (decorators)
     # ======================
 
-    def read(self, route):
+    def read(self, route, encoding='utf-8'):
         def decorator(func):
-            self.onread(route, func)
+            self.onread(route, func, encoding)
             return lambda *args, **kwargs: None
         return decorator
 
