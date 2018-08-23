@@ -1,6 +1,7 @@
 import fuse
 
 import os
+from os import st
 import sys
 import errno
 
@@ -11,9 +12,9 @@ from . import router
 class FileSystem(fuse.Operations):
     def __init__(self):
         self.router = router.Router()
+        self.contents = {}
 
         self.fh = 0
-        self.contents = {}
 
         self.timestamp = time.time()
 
@@ -28,9 +29,9 @@ class FileSystem(fuse.Operations):
         result = self.router.lookup(path)
         if result:
             if result.data:
-                mode = os.st.S_IFREG | 0o660
+                mode = result.data.mode
             else:
-                mode = os.st.S_IFDIR | 0o660
+                mode = st.S_IFDIR | 0o660
         else:
             raise fuse.FuseOSError(errno.ENOENT)
 
@@ -85,8 +86,7 @@ class FileSystem(fuse.Operations):
         if fi.fh not in self.contents:
             result = self.router.lookup(path)
             if result:
-                reader = Reader(result.data(path, result.parameters))
-                self.contents[fi.fh] = reader
+                self.contents[fi.fh] = result.data.open(path, result.parameters)
             else: return
 
         buf = self.contents[fi.fh].read(length, offset)
@@ -105,10 +105,28 @@ class FileSystem(fuse.Operations):
     # =========
 
     def onread(self, path, callback):
-        self.router.add(path, callback)
+        f = File(callback)
+        self.router.add(path, f)
 
-class Reader:
-    def __init__(self, contents):
+class File:
+    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o660):
+        self.callback = callback
+
+        self.ftype = ftype
+        self.permissions = permissions
+
+    @property
+    def mode(self):
+        return self.ftype | self.permissions
+
+    def open(self, *args):
+        return OpenFile(self.callback, self.ftype, self.permissions, args)
+
+class OpenFile(File):
+    def __init__(self, callback, ftype, permissions, args):
+        super().__init__(callback, ftype, permissions)
+
+        contents = self.callback(*args)
         try:
             self.contents = iter(contents)
             self.cache = bytes()
