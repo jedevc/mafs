@@ -23,7 +23,7 @@ All of the examples are listed in `examples/`. Here's a demo of running the
 	$ mkdir fs
 	$ python3 examples/places.py fs
 	$ ls fs
-	place
+	place  shortcut
 	$ ls fs/place
 	here  there
 	$ cat fs/place/here
