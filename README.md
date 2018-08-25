@@ -11,7 +11,8 @@ low-level details, provides sane defaults, and lets you focus on functionality.
 
 ## Installation
 
-MagicFS is available on pypi, and is easily installable with pip.
+MagicFS is available on [pypi](https://pypi.org/project/mafs/), and is easily
+installable with pip.
 
 	$ pip3 install mafs
 
