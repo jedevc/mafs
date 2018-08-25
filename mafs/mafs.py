@@ -4,7 +4,7 @@ import argparse
 
 from . import filesystem
 
-class QuickFS:
+class MagicFS:
     def __init__(self):
         self.fs = filesystem.FileSystem()
 

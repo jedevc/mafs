@@ -1,18 +1,18 @@
-# QuickFS (qufs)
+# MagicFS (mafs)
 
-QuickFS is a simple to use tool that allows you to easily create virtual
+MagicFS is a simple-to-use tool that allows you to easily create virtual
 filesystems using FUSE.
 
 If you've ever wanted to play around with filesystems, but have been put off by
 the complexity of libfuse, this library could be for you. You can easily create
 whole, feature-complete filesystems in just a few lines of code. No need for
-painstakingly dealing with folder structures and buffers, qufs manages all the
+painstakingly dealing with folder structures and buffers, mafs manages all the
 low-level details, provides sane defaults, and lets you focus on functionality.
 
 ## Installation
 
-	$ git clone https://github.com/jedevc/qufs.git
-	$ cd qufs
+	$ git clone https://github.com/jedevc/mafs.git
+	$ cd mafs
 	$ pip install .
 
 ## Examples

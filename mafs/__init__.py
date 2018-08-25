@@ -1,0 +1,1 @@
+from .mafs import MagicFS

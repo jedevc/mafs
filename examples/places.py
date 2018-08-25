@@ -1,6 +1,6 @@
-from qufs import QuickFS
+from mafs import MagicFS
 
-fs = QuickFS()
+fs = MagicFS()
 
 @fs.read('/place/here')
 def place_here(path, ps):

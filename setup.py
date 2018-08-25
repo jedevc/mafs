@@ -4,12 +4,12 @@ with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='qufs',
+    name='mafs',
     version='0.0.1',
     license='MIT',
 
-    url='https://github.com/jedevc/qufs',
-    description='A tool to quickly create virtual filesystems',
+    url='https://github.com/jedevc/mafs',
+    description='Quickly conjure up virtual fileysystems',
     long_description=long_description,
     long_description_content_type='text/markdown',
 
