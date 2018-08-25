@@ -11,9 +11,9 @@ low-level details, provides sane defaults, and lets you focus on functionality.
 
 ## Installation
 
-	$ git clone https://github.com/jedevc/mafs.git
-	$ cd mafs
-	$ pip install .
+MagicFS is available on pypi, and is easily installable with pip.
+
+	$ pip3 install mafs
 
 ## Examples
 
@@ -33,3 +33,11 @@ All of the examples are listed in `examples/`. Here's a demo of running the
 	$ cat fs/place/anywhere
 	this is anywhere!
 	$ fusermount -u fs
+
+## Development
+
+To download MagicFS for development, execute the following commands:
+
+	$ git clone https://github.com/jedevc/mafs.git
+	$ cd mafs
+	$ pip3 install -r requirements.txt
