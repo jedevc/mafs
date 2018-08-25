@@ -31,17 +31,19 @@ class FileSystem(fuse.Operations):
             if result.data:
                 mode = result.data.mode
             else:
-                mode = st.S_IFDIR | 0o660
+                mode = st.S_IFDIR | 0o755
         else:
             raise fuse.FuseOSError(errno.ENOENT)
+
+        uid, gid, _ = fuse.fuse_get_context()
 
         return {
             'st_atime': self.timestamp,
             'st_ctime': self.timestamp,
             'st_mtime': self.timestamp,
 
-            'st_gid': os.getgid(),
-            'st_uid': os.getuid(),
+            'st_gid': gid,
+            'st_uid': uid,
 
             'st_mode': mode,
             'st_nlink': 1,
@@ -117,7 +119,7 @@ class FileSystem(fuse.Operations):
         self.router.add(path, f)
 
 class File:
-    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o660, encoding='utf-8'):
+    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o644, encoding='utf-8'):
         self.callback = callback
 
         self.ftype = ftype

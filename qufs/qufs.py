@@ -21,7 +21,7 @@ class QuickFS:
 
     def mount(self, mountpoint, foreground=False, threads=False):
         fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=not threads,
-                foreground=foreground)
+                foreground=foreground, default_permissions=True)
 
     # Callbacks
     # =========
