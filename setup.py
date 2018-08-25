@@ -8,16 +8,26 @@ setuptools.setup(
     version='0.0.1',
     license='MIT',
 
+    author='Justin Chadwell',
+    author_email='jedevc@gmail.com',
+
     url='https://github.com/jedevc/mafs',
     description='Quickly conjure up virtual fileysystems',
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    author='Justin Chadwell',
-    author_email='jedevc@gmail.com',
-
     packages=setuptools.find_packages(),
     install_requires=[
         'fusepy'
+    ],
+
+    classifiers=[
+        'Development Status :: 2 - Pre-Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: System :: Filesystems'
     ]
 )
