@@ -94,15 +94,15 @@ class FileSystem(fuse.Operations):
             else: return
 
         buf = self.contents[fi.fh].read(length, offset)
-        if buf:
-            return buf
-        else:
-            self.contents.pop(fi.fh)
+        return buf
 
     # def write(self, path, buf, offset, fi): pass
     # def truncate(self, path, length, fi=None): pass
     # def flush(self, path, fi): pass
-    # def release(self, path, fi): pass
+
+    def release(self, path, fi):
+        self.contents.pop(fi.fh)
+
     # def fsync(self, path, fdatasync, fi): pass
 
     # Callbacks
