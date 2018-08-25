@@ -21,10 +21,6 @@ class FileSystem(fuse.Operations):
     # Filesystem methods
     # ==================
 
-    # def access(self, path, mode): pass
-    # def chmod(self, path, mode): pass
-    # def chown(self, path, uid, gid): pass
-
     def getattr(self, path, fi=None):
         result = self.router.lookup(path)
         if result:
@@ -63,16 +59,6 @@ class FileSystem(fuse.Operations):
         if result:
             return result.data.callback(path, result.parameters)
 
-    # def mknod(self, path, mode, dev): pass
-    # def rmdir(self, path): pass
-    # def mkdir(self, path, mode): pass
-    # def statfs(self, path): pass
-    # def unlink(self, path): pass
-    # def symlink(self, name, target): pass
-    # def rename(self, old, new): pass
-    # def link(self, target, name): pass
-    # def utimens(self, path, times=None): pass
-
     # File methods
     # ============
 
@@ -86,8 +72,6 @@ class FileSystem(fuse.Operations):
         else:
             return -1
 
-    # def create(self, path, mode, fi=None): pass
-
     def read(self, path, length, offset, fi):
         if fi.fh not in self.contents:
             result = self.router.lookup(path)
@@ -98,14 +82,8 @@ class FileSystem(fuse.Operations):
         buf = self.contents[fi.fh].read(length, offset)
         return buf
 
-    # def write(self, path, buf, offset, fi): pass
-    # def truncate(self, path, length, fi=None): pass
-    # def flush(self, path, fi): pass
-
     def release(self, path, fi):
         self.contents.pop(fi.fh)
-
-    # def fsync(self, path, fdatasync, fi): pass
 
     # Callbacks
     # =========
