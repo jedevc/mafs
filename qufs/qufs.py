@@ -13,9 +13,11 @@ class QuickFS:
         parser.add_argument('mountpoint', help='folder to mount the filesystem in')
         parser.add_argument('-fg', '--foreground', action='store_true',
                 help='run in the foreground')
+        parser.add_argument('-t', '--threads', action='store_true',
+                help='use threading')
         args = parser.parse_args()
 
-        self.mount(args.mountpoint, args.foreground)
+        self.mount(args.mountpoint, args.foreground, args.threads)
 
     def mount(self, mountpoint, foreground=False, threads=False):
         fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=not threads,
