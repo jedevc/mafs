@@ -1,7 +1,7 @@
 import fuse
 
 import os
-from os import st
+import stat
 import sys
 import errno
 
@@ -28,7 +28,7 @@ class FileSystem(fuse.Operations):
             if result.data:
                 mode = result.data.mode
             else:
-                mode = st.S_IFDIR | 0o755
+                mode = stat.S_IFDIR | 0o755
         else:
             raise fuse.FuseOSError(errno.ENOENT)
 
@@ -105,7 +105,7 @@ class FileSystem(fuse.Operations):
         f.onread(callback, encoding)
 
     def onreadlink(self, path, callback):
-        f = self._create_file(path, ftype=st.S_IFLNK)
+        f = self._create_file(path, ftype=stat.S_IFLNK)
         f.onget(callback)
 
     def onwrite(self, path, callback, encoding='utf-8'):

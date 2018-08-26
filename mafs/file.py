@@ -1,7 +1,7 @@
-from os import st
+import stat
 
 class FileData:
-    def __init__(self, ftype=st.S_IFREG, permissions=0o644):
+    def __init__(self, ftype=stat.S_IFREG, permissions=0o644):
         self.get_callback = None
 
         self.read_callback = None
