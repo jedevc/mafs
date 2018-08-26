@@ -107,10 +107,10 @@ class FileSystem(fuse.Operations):
         if result and result.data:
             f = result.data
         else:
-            f = file.FileData(encoding=encoding)
+            f = file.FileData()
             self.router.add(path, f)
 
-        f.onread(callback)
+        f.onread(callback, encoding)
 
     def onreadlink(self, path, callback):
         result = self.router.lookup(path)
@@ -122,7 +122,7 @@ class FileSystem(fuse.Operations):
 
         f.onread(callback)
 
-    def onwrite(self, path, callback):
+    def onwrite(self, path, callback, encoding='utf-8'):
         result = self.router.lookup(path)
         if result and result.data:
             f = result.data
@@ -130,4 +130,4 @@ class FileSystem(fuse.Operations):
             f = file.FileData()
             self.router.add(path, f)
 
-        f.onwrite(callback)
+        f.onwrite(callback, encoding)

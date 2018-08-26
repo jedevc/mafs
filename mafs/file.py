@@ -1,24 +1,27 @@
 from os import st
 
 class FileData:
-    def __init__(self, ftype=st.S_IFREG, permissions=0o644, encoding='utf-8'):
+    def __init__(self, ftype=st.S_IFREG, permissions=0o644):
         self.read_callback = None
+        self.read_encoding = None
+
         self.write_callback = None
+        self.write_encoding = None
 
         self.ftype = ftype
         self.permissions = permissions
-
-        self.encoding = encoding
 
     @property
     def mode(self):
         return self.ftype | self.permissions
 
-    def onread(self, callback):
+    def onread(self, callback, encoding=0o644):
         self.read_callback = callback
+        self.read_encoding = encoding
 
-    def onwrite(self, callback):
+    def onwrite(self, callback, encoding=0o644):
         self.write_callback = callback
+        self.write_encoding = encoding
 
 class File:
     def __init__(self, file_data, args):
@@ -43,8 +46,8 @@ class File:
         while self.contents and len(self.cache) < offset + length:
             try:
                 part = next(self.contents)
-                if self.file_data.encoding:
-                    part = part.encode(self.file_data.encoding)
+                if self.file_data.read_encoding:
+                    part = part.encode(self.file_data.read_encoding)
                 self.cache += part
             except StopIteration:
                 self.contents = None
@@ -53,5 +56,9 @@ class File:
 
     def write(self, data, offset):
         if self.file_data.write_callback:
+            if self.file_data.write_encoding:
+                data = data.decode(self.file_data.write_encoding)
+
             self.file_data.write_callback(data, *self.args)
+
             return len(data)
