@@ -74,6 +74,7 @@ class FileSystem(fuse.Operations):
             return -1
 
     def read(self, path, length, offset, fi):
+        # TODO: move into self.open
         if fi.fh not in self.open_files:
             result = self.router.lookup(path)
             if result:
@@ -83,8 +84,20 @@ class FileSystem(fuse.Operations):
         buf = self.open_files[fi.fh].read(length, offset)
         return buf
 
+    def write(self, path, data, offset, fi):
+        if fi.fh not in self.open_files:
+            result = self.router.lookup(path)
+            if result:
+                self.open_files[fi.fh] = file.File(result.data, [path, result.parameters])
+            else: return
+
+        return self.open_files[fi.fh].write(data, offset)
+
     def release(self, path, fi):
         self.open_files.pop(fi.fh)
+
+    def truncate(self, path, length, fh=None):
+        pass
 
     # Callbacks
     # =========
@@ -108,3 +121,13 @@ class FileSystem(fuse.Operations):
             self.router.add(path, f)
 
         f.onread(callback)
+
+    def onwrite(self, path, callback):
+        result = self.router.lookup(path)
+        if result and result.data:
+            f = result.data
+        else:
+            f = file.FileData()
+            self.router.add(path, f)
+
+        f.onwrite(callback)
