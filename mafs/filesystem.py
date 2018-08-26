@@ -60,6 +60,9 @@ class FileSystem(fuse.Operations):
         if result:
             return result.data.get(path, result.parameters)
 
+    def truncate(self, path, length, fi=None):
+        pass
+
     # File methods
     # ============
 
@@ -84,9 +87,6 @@ class FileSystem(fuse.Operations):
 
     def release(self, path, fi):
         self.open_files.pop(fi.fh)
-
-    def truncate(self, path, length, fh=None):
-        pass
 
     # Callbacks
     # =========
