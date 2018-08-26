@@ -64,33 +64,22 @@ class FileSystem(fuse.Operations):
     # ============
 
     def open(self, path, fi):
-        if self.router.lookup(path):
+        result = self.router.lookup(path)
+        if result and result.data:
             fi.fh = self.fh
             self.fh += 1
-
             fi.direct_io = True
+
+            self.open_files[fi.fh] = file.File(result.data, [path, result.parameters])
+
             return 0
         else:
             return -1
 
     def read(self, path, length, offset, fi):
-        # TODO: move into self.open
-        if fi.fh not in self.open_files:
-            result = self.router.lookup(path)
-            if result:
-                self.open_files[fi.fh] = file.File(result.data, [path, result.parameters])
-            else: return
-
-        buf = self.open_files[fi.fh].read(length, offset)
-        return buf
+        return self.open_files[fi.fh].read(length, offset)
 
     def write(self, path, data, offset, fi):
-        if fi.fh not in self.open_files:
-            result = self.router.lookup(path)
-            if result:
-                self.open_files[fi.fh] = file.File(result.data, [path, result.parameters])
-            else: return
-
         return self.open_files[fi.fh].write(data, offset)
 
     def release(self, path, fi):
