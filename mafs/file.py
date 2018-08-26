@@ -69,4 +69,4 @@ class File:
 
             self.file_data.write_callback(data, *self.args)
 
-            return len(data)
+        return len(data)
