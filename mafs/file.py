@@ -1,7 +1,7 @@
 import stat
 
 class FileData:
-    def __init__(self, ftype=stat.S_IFREG, permissions=0o644):
+    def __init__(self, ftype=stat.S_IFREG):
         self.get_callback = None
 
         self.read_callback = None
@@ -11,11 +11,18 @@ class FileData:
         self.write_encoding = None
 
         self.ftype = ftype
-        self.permissions = permissions
 
     @property
     def mode(self):
-        return self.ftype | self.permissions
+        permissions = 0
+        if self.ftype == stat.S_IFREG:
+            if self.read_callback:
+                permissions |= stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+            if self.write_callback:
+                permissions |= stat.S_IWUSR
+            return self.ftype | permissions
+        else:
+            return self.ftype | 0o644
 
     def get(self, *args):
         return self.get_callback(*args)
