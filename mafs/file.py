@@ -2,6 +2,8 @@ from os import st
 
 class FileData:
     def __init__(self, ftype=st.S_IFREG, permissions=0o644):
+        self.get_callback = None
+
         self.read_callback = None
         self.read_encoding = None
 
@@ -14,6 +16,12 @@ class FileData:
     @property
     def mode(self):
         return self.ftype | self.permissions
+
+    def get(self, *args):
+        return self.get_callback(*args)
+
+    def onget(self, callback):
+        self.get_callback = callback
 
     def onread(self, callback, encoding=0o644):
         self.read_callback = callback

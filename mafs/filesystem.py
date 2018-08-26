@@ -58,7 +58,7 @@ class FileSystem(fuse.Operations):
     def readlink(self, path):
         result = self.router.lookup(path)
         if result:
-            return result.data.read_callback(path, result.parameters)
+            return result.data.get(path, result.parameters)
 
     # File methods
     # ============
@@ -120,7 +120,7 @@ class FileSystem(fuse.Operations):
             f = file.FileData(ftype=st.S_IFLNK)
             self.router.add(path, f)
 
-        f.onread(callback)
+        f.onget(callback)
 
     def onwrite(self, path, callback, encoding='utf-8'):
         result = self.router.lookup(path)
