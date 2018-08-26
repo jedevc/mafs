@@ -30,11 +30,11 @@ class FileData:
     def onget(self, callback):
         self.get_callback = callback
 
-    def onread(self, callback, encoding=0o644):
+    def onread(self, callback, encoding='utf-8'):
         self.read_callback = callback
         self.read_encoding = encoding
 
-    def onwrite(self, callback, encoding=0o644):
+    def onwrite(self, callback, encoding='utf-8'):
         self.write_callback = callback
         self.write_encoding = encoding
 
