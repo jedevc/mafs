@@ -91,32 +91,23 @@ class FileSystem(fuse.Operations):
     # Callbacks
     # =========
 
-    def onread(self, path, callback, encoding='utf-8'):
+    def _create_file(self, path, *args, **kwargs):
         result = self.router.lookup(path)
         if result and result.data:
-            f = result.data
+            return result.data
         else:
-            f = file.FileData()
-            self.router.add(path, f)
+            fd = file.FileData(*args, **kwargs)
+            self.router.add(path, fd)
+            return fd
 
+    def onread(self, path, callback, encoding='utf-8'):
+        f = self._create_file(path)
         f.onread(callback, encoding)
 
     def onreadlink(self, path, callback):
-        result = self.router.lookup(path)
-        if result and result.data:
-            f = result.data
-        else:
-            f = file.FileData(ftype=st.S_IFLNK)
-            self.router.add(path, f)
-
+        f = self._create_file(path, ftype=st.S_IFLNK)
         f.onget(callback)
 
     def onwrite(self, path, callback, encoding='utf-8'):
-        result = self.router.lookup(path)
-        if result and result.data:
-            f = result.data
-        else:
-            f = file.FileData()
-            self.router.add(path, f)
-
+        f = self._create_file(path)
         f.onwrite(callback, encoding)
