@@ -1,8 +1,8 @@
 from os import st
 
 class FileData:
-    def __init__(self, callback, ftype=st.S_IFREG, permissions=0o644, encoding='utf-8'):
-        self.callback = callback
+    def __init__(self, ftype=st.S_IFREG, permissions=0o644, encoding='utf-8'):
+        self.read_callback = None
 
         self.ftype = ftype
         self.permissions = permissions
@@ -13,11 +13,14 @@ class FileData:
     def mode(self):
         return self.ftype | self.permissions
 
+    def onread(self, callback):
+        self.read_callback = callback
+
 class File:
     def __init__(self, file_data, args):
         self.file_data = file_data
 
-        contents = file_data.callback(*args)
+        contents = file_data.read_callback(*args)
         try:
             self.contents = iter(contents)
             self.cache = bytes()
