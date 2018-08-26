@@ -76,7 +76,7 @@ class FileSystem(fuse.Operations):
         if fi.fh not in self.open_files:
             result = self.router.lookup(path)
             if result:
-                self.open_files[fi.fh] = result.data.open(path, result.parameters)
+                self.open_files[fi.fh] = File(result.data, [path, result.parameters])
             else: return
 
         buf = self.open_files[fi.fh].read(length, offset)
@@ -89,14 +89,14 @@ class FileSystem(fuse.Operations):
     # =========
 
     def onread(self, path, callback, encoding='utf-8'):
-        f = File(callback, encoding=encoding)
+        f = FileData(callback, encoding=encoding)
         self.router.add(path, f)
 
     def onreadlink(self, path, callback):
-        f = File(callback, st.S_IFLNK)
+        f = FileData(callback, st.S_IFLNK)
         self.router.add(path, f)
 
-class File:
+class FileData:
     def __init__(self, callback, ftype=st.S_IFREG, permissions=0o644, encoding='utf-8'):
         self.callback = callback
 
@@ -109,14 +109,11 @@ class File:
     def mode(self):
         return self.ftype | self.permissions
 
-    def open(self, *args):
-        return OpenFile(self.callback, self.ftype, self.permissions, self.encoding, args)
+class File:
+    def __init__(self, file_data, args):
+        self.file_data = file_data
 
-class OpenFile(File):
-    def __init__(self, callback, ftype, permissions, encoding, args):
-        super().__init__(callback, ftype, permissions, encoding)
-
-        contents = self.callback(*args)
+        contents = file_data.callback(*args)
         try:
             self.contents = iter(contents)
             self.cache = bytes()
@@ -128,8 +125,8 @@ class OpenFile(File):
         while self.contents and len(self.cache) < offset + length:
             try:
                 part = next(self.contents)
-                if self.encoding:
-                    part = part.encode(self.encoding)
+                if self.file_data.encoding:
+                    part = part.encode(self.file_data.encoding)
                 self.cache += part
             except StopIteration:
                 self.contents = None
