@@ -46,12 +46,8 @@ class File:
 
         if file_data.read_callback:
             contents = file_data.read_callback(*args)
-            try:
-                self.contents = iter(contents)
-                self.cache = bytes()
-            except TypeError:
-                self.cache = self.contents
-                self.contents = None
+            self.contents = iter(contents)
+            self.cache = bytes()
 
         if file_data.write_callback:
             self.write_contents = file_data.write_callback(*args)
