@@ -15,8 +15,6 @@ class FileSystem(fuse.Operations):
         self.router = router.Router()
         self.open_files = {}
 
-        self.truncated_files = set()
-
         self.fh = 0
 
         self.timestamp = time.time()
@@ -63,7 +61,7 @@ class FileSystem(fuse.Operations):
             return result.data.get(path, result.parameters)
 
     def truncate(self, path, length, fi=None):
-        self.truncated_files.add(path)
+        pass
 
     # File methods
     # ============
@@ -85,14 +83,11 @@ class FileSystem(fuse.Operations):
         return self.open_files[fi.fh].read(length, offset)
 
     def write(self, path, data, offset, fi):
-        if path in self.truncated_files:
-            self.truncated_files.remove(path)
-            return self.open_files[fi.fh].write(data, offset)
-        else:
-            raise fuse.FuseOSError(errno.ENOSYS)
+        return self.open_files[fi.fh].write(data, offset)
 
     def release(self, path, fi):
-        self.open_files.pop(fi.fh)
+        file = self.open_files.pop(fi.fh)
+        file.release()
 
     # Callbacks
     # =========

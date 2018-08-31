@@ -44,10 +44,6 @@ class File:
 
         self.args = args
 
-        self.contents = None
-        self.cache = ''
-
-        # TODO: move to read function
         if file_data.read_callback:
             contents = file_data.read_callback(*args)
             try:
@@ -56,6 +52,10 @@ class File:
             except TypeError:
                 self.cache = self.contents
                 self.contents = None
+
+        if file_data.write_callback:
+            self.write_contents = file_data.write_callback(*args)
+            next(self.write_contents)
 
     def read(self, length, offset):
         while self.contents and len(self.cache) < offset + length:
@@ -74,6 +74,10 @@ class File:
             if self.file_data.write_encoding:
                 data = data.decode(self.file_data.write_encoding)
 
-            self.file_data.write_callback(data, offset, *self.args)
+            self.write_contents.send((data, offset))
 
         return len(data)
+
+    def release(self):
+        if self.file_data.write_callback:
+            self.write_contents.close()
