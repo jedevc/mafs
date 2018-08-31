@@ -35,6 +35,17 @@ class MagicFS:
     def onwrite(self, route, func):
         self.fs.onwrite(route, func)
 
+    def onwriteall(self, route, func):
+        def nfunc(*args):
+            contents = []
+            try:
+                while True:
+                    data, offset = yield
+                    contents[offset:offset+len(data)] = data
+            except GeneratorExit:
+                func(*args, ''.join(contents))
+        self.fs.onwrite(route, nfunc)
+
     # Callbacks (decorators)
     # ======================
 
@@ -53,5 +64,11 @@ class MagicFS:
     def write(self, route):
         def decorator(func):
             self.onwrite(route, func)
+            return lambda *args, **kwargs: None
+        return decorator
+
+    def writeall(self, route):
+        def decorator(func):
+            self.onwriteall(route, func)
             return lambda *args, **kwargs: None
         return decorator
