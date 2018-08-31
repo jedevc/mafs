@@ -45,7 +45,8 @@ class MagicFS:
                     data, offset = yield
                     contents[offset:offset+len(data)] = data
             except GeneratorExit:
-                func(*args, ''.join(contents))
+                if contents:
+                    func(*args, ''.join(contents))
         self.fs.onwrite(route, nfunc)
 
     def onreadlink(self, route, func):
