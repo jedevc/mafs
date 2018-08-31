@@ -72,13 +72,13 @@ class MagicFS:
             return lambda *args, **kwargs: None
         return decorator
 
-    def write(self, route):
+    def write(self, route, encoding='utf-8'):
         def decorator(func):
             self.onwrite(route, func)
             return lambda *args, **kwargs: None
         return decorator
 
-    def writeall(self, route):
+    def writeall(self, route, encoding='utf-8'):
         def decorator(func):
             self.onwriteall(route, func)
             return lambda *args, **kwargs: None
