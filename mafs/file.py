@@ -74,6 +74,6 @@ class File:
             if self.file_data.write_encoding:
                 data = data.decode(self.file_data.write_encoding)
 
-            self.file_data.write_callback(data, *self.args)
+            self.file_data.write_callback(data, offset, *self.args)
 
         return len(data)
