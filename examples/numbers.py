@@ -9,4 +9,17 @@ def numbers(path, ps):
             yield '{:>2} '.format(i * 10 + j)
         yield '\n'
 
+number = 5
+
+@fs.read('/multiple')
+def multiple_read(path, ps):
+    for i in range(12):
+        yield str(number + i * number) + ' '
+    yield '\n'
+
+@fs.writeall('/multiple')
+def multiple_write(path, ps, contents):
+    global number
+    number = int(contents.strip())
+
 fs.run()
