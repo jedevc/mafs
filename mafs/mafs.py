@@ -34,9 +34,6 @@ class MagicFS:
             yield func(*args)
         self.fs.onread(route, nfunc)
 
-    def onreadlink(self, route, func):
-        self.fs.onreadlink(route, func)
-
     def onwrite(self, route, func):
         self.fs.onwrite(route, func)
 
@@ -51,35 +48,33 @@ class MagicFS:
                 func(*args, ''.join(contents))
         self.fs.onwrite(route, nfunc)
 
+    def onreadlink(self, route, func):
+        self.fs.onreadlink(route, func)
+
     # Callbacks (decorators)
     # ======================
 
     def read(self, route, encoding='utf-8'):
         def decorator(func):
             self.onread(route, func, encoding)
-            return lambda *args, **kwargs: None
         return decorator
 
     def readall(self, route, encoding='utf-8'):
         def decorator(func):
             self.onreadall(route, func, encoding)
-            return lambda *args, **kwargs: None
-        return decorator
-
-    def readlink(self, route):
-        def decorator(func):
-            self.onreadlink(route, func)
-            return lambda *args, **kwargs: None
         return decorator
 
     def write(self, route, encoding='utf-8'):
         def decorator(func):
             self.onwrite(route, func)
-            return lambda *args, **kwargs: None
         return decorator
 
     def writeall(self, route, encoding='utf-8'):
         def decorator(func):
             self.onwriteall(route, func)
-            return lambda *args, **kwargs: None
+        return decorator
+
+    def readlink(self, route):
+        def decorator(func):
+            self.onreadlink(route, func)
         return decorator
