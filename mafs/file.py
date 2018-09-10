@@ -44,8 +44,8 @@ class File:
 
         self.args = args
 
-        self.reader = FileReader(file_data, args)
-        self.writer = FileWriter(file_data, args)
+        self.reader = _FileReader(file_data, args)
+        self.writer = _FileWriter(file_data, args)
 
     def read(self, length, offset):
         return self.reader.read(length, offset)
@@ -57,7 +57,7 @@ class File:
         self.reader.release()
         self.writer.release()
 
-class FileReader:
+class _FileReader:
     def __init__(self, file_data, args):
         self.contents = None
         self.cache = bytes()
@@ -89,7 +89,7 @@ class FileReader:
     def release(self):
         pass
 
-class FileWriter:
+class _FileWriter:
     def __init__(self, file_data, args):
         self.contents = None
         self.encoding  = file_data.write_encoding
