@@ -59,6 +59,7 @@ class File:
 
 class _FileReader:
     def __init__(self, file_data, args):
+        self.file = None
         self.generator = None
         self.cache = bytes()
         self.encoding = file_data.read_encoding
@@ -67,29 +68,42 @@ class _FileReader:
             return
 
         contents = file_data.read_callback(*args)
-        try:
-            # raw string
-            self.cache = contents.encode(self.encoding)
-        except AttributeError:
-            # generator or other iterable
-            self.generator = iter(contents)
+        if hasattr(contents, 'read') and hasattr(contents, 'write'):
+            # file-like object
+            self.file = contents
+        else:
+            try:
+                # raw string
+                self.cache = contents.encode(self.encoding)
+            except AttributeError:
+                # generator or other iterable
+                self.generator = iter(contents)
 
     def read(self, length, offset):
-        # read data into cache if provided by an iterable
-        while self.generator and len(self.cache) < offset + length:
-            try:
-                part = next(self.generator)
-                if self.encoding:
-                    part = part.encode(self.encoding)
-                self.cache += part
-            except StopIteration:
-                self.generator = None
+        if self.file:
+            # read file data
+            self.file.seek(offset)
+            data = self.file.read(length)
+            if self.encoding:
+                data = data.encode(self.encoding)
+            return data
+        else:
+            # read data into cache if provided by an iterable
+            while self.generator and len(self.cache) < offset + length:
+                try:
+                    part = next(self.generator)
+                    if self.encoding:
+                        part = part.encode(self.encoding)
+                    self.cache += part
+                except StopIteration:
+                    self.generator = None
 
-        # provide requested data from the cache
-        return self.cache[offset:offset + length]
+            # provide requested data from the cache
+            return self.cache[offset:offset + length]
 
     def release(self):
-        pass
+        if self.file:
+            self.file.close()
 
 class _FileWriter:
     def __init__(self, file_data, args):
