@@ -44,37 +44,14 @@ class File:
 
         self.args = args
 
-        if file_data.read_callback:
-            contents = file_data.read_callback(*args)
-            if type(contents) == bytes:
-                # raw bytes
-                self.cache = contents
-                self.contents = None
-            else:
-                try:
-                    # raw string
-                    self.cache = contents.encode(file_data.read_encoding)
-                    self.contents = None
-                except AttributeError:
-                    # generator or other iterable
-                    self.contents = iter(contents)
-                    self.cache = bytes()
+        self.reader = FileReader(file_data, args)
 
         if file_data.write_callback:
             self.write_contents = file_data.write_callback(*args)
             next(self.write_contents)
 
     def read(self, length, offset):
-        while self.contents and len(self.cache) < offset + length:
-            try:
-                part = next(self.contents)
-                if self.file_data.read_encoding:
-                    part = part.encode(self.file_data.read_encoding)
-                self.cache += part
-            except StopIteration:
-                self.contents = None
-
-        return self.cache[offset:offset + length]
+        return self.reader.read(length, offset)
 
     def write(self, data, offset):
         if self.file_data.write_callback:
@@ -88,3 +65,33 @@ class File:
     def release(self):
         if self.file_data.write_callback:
             self.write_contents.close()
+
+class FileReader:
+    def __init__(self, file_data, args):
+        self.contents = None
+        self.cache = bytes()
+
+        self.encoding = file_data.read_encoding
+
+        if not file_data.read_callback:
+            return
+
+        contents = file_data.read_callback(*args)
+        try:
+            # raw string
+            self.cache = contents.encode(self.encoding)
+        except AttributeError:
+            # generator or other iterable
+            self.contents = iter(contents)
+
+    def read(self, length, offset):
+        while self.contents and len(self.cache) < offset + length:
+            try:
+                part = next(self.contents)
+                if self.encoding:
+                    part = part.encode(self.encoding)
+                self.cache += part
+            except StopIteration:
+                self.contents = None
+
+        return self.cache[offset:offset + length]
