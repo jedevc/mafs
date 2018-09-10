@@ -29,11 +29,6 @@ class MagicFS:
     def onread(self, route, func, encoding='utf-8'):
         self.fs.onread(route, func, encoding)
 
-    def onreadall(self, route, func, encoding='utf-8'):
-        def nfunc(*args):
-            yield func(*args)
-        self.fs.onread(route, nfunc)
-
     def onwrite(self, route, func):
         self.fs.onwrite(route, func)
 
@@ -58,11 +53,6 @@ class MagicFS:
     def read(self, route, encoding='utf-8'):
         def decorator(func):
             self.onread(route, func, encoding)
-        return decorator
-
-    def readall(self, route, encoding='utf-8'):
-        def decorator(func):
-            self.onreadall(route, func, encoding)
         return decorator
 
     def write(self, route, encoding='utf-8'):

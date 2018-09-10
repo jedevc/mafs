@@ -46,8 +46,19 @@ class File:
 
         if file_data.read_callback:
             contents = file_data.read_callback(*args)
-            self.contents = iter(contents)
-            self.cache = bytes()
+            if type(contents) == bytes:
+                # raw bytes
+                self.cache = contents
+                self.contents = None
+            else:
+                try:
+                    # raw string
+                    self.cache = contents.encode(file_data.read_encoding)
+                    self.contents = None
+                except AttributeError:
+                    # generator or other iterable
+                    self.contents = iter(contents)
+                    self.cache = bytes()
 
         if file_data.write_callback:
             self.write_contents = file_data.write_callback(*args)
