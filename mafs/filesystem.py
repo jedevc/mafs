@@ -44,7 +44,7 @@ class FileSystem(fuse.Operations):
 
             'st_mode': mode,
             'st_nlink': 1,
-            'st_size': 1
+            'st_size': 0
         }
 
     def readdir(self, path, fi):
