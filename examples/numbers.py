@@ -17,7 +17,7 @@ def multiple_read(path, ps):
         yield str(number + i * number) + ' '
     yield '\n'
 
-@fs.writeall('/multiple')
+@fs.write('/multiple')
 def multiple_write(path, ps, contents):
     global number
     number = int(contents.strip())

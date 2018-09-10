@@ -75,6 +75,7 @@ class _FileReader:
             self.contents = iter(contents)
 
     def read(self, length, offset):
+        # read data into cache if provided by an iterable
         while self.contents and len(self.cache) < offset + length:
             try:
                 part = next(self.contents)
@@ -84,6 +85,7 @@ class _FileReader:
             except StopIteration:
                 self.contents = None
 
+        # provide requested data from the cache
         return self.cache[offset:offset + length]
 
     def release(self):
@@ -92,23 +94,37 @@ class _FileReader:
 class _FileWriter:
     def __init__(self, file_data, args):
         self.contents = None
-        self.encoding  = file_data.write_encoding
+        self.callback = None
+        self.cache = []
+
+        self.encoding = file_data.write_encoding
 
         if not file_data.write_callback:
             return
 
-        self.contents = file_data.write_callback(*args)
-        next(self.contents)
+        try:
+            self.contents = file_data.write_callback(*args)
+            next(self.contents)
+        except TypeError:
+            self.callback = lambda contents: file_data.write_callback(*args, contents)
 
     def write(self, data, offset):
         if self.contents:
+            # send data into generator if available
             if self.encoding:
                 data = data.decode(self.encoding)
-
             self.contents.send((data, offset))
+        elif self.callback:
+            # otherwise, build up the cache
+            self.cache[offset:offset + len(data)] = data
 
         return len(data)
 
     def release(self):
         if self.contents:
+            # close generator if available
             self.contents.close()
+        elif self.callback:
+            # otherwise finalize the cache and send it to the callback
+            if self.cache:
+                self.callback(bytes(self.cache).decode(self.encoding))
