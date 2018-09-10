@@ -45,32 +45,22 @@ class File:
         self.args = args
 
         self.reader = FileReader(file_data, args)
-
-        if file_data.write_callback:
-            self.write_contents = file_data.write_callback(*args)
-            next(self.write_contents)
+        self.writer = FileWriter(file_data, args)
 
     def read(self, length, offset):
         return self.reader.read(length, offset)
 
     def write(self, data, offset):
-        if self.file_data.write_callback:
-            if self.file_data.write_encoding:
-                data = data.decode(self.file_data.write_encoding)
-
-            self.write_contents.send((data, offset))
-
-        return len(data)
+        return self.writer.write(data, offset)
 
     def release(self):
-        if self.file_data.write_callback:
-            self.write_contents.close()
+        self.reader.release()
+        self.writer.release()
 
 class FileReader:
     def __init__(self, file_data, args):
         self.contents = None
         self.cache = bytes()
-
         self.encoding = file_data.read_encoding
 
         if not file_data.read_callback:
@@ -95,3 +85,30 @@ class FileReader:
                 self.contents = None
 
         return self.cache[offset:offset + length]
+
+    def release(self):
+        pass
+
+class FileWriter:
+    def __init__(self, file_data, args):
+        self.contents = None
+        self.encoding  = file_data.write_encoding
+
+        if not file_data.write_callback:
+            return
+
+        self.contents = file_data.write_callback(*args)
+        next(self.contents)
+
+    def write(self, data, offset):
+        if self.contents:
+            if self.encoding:
+                data = data.decode(self.encoding)
+
+            self.contents.send((data, offset))
+
+        return len(data)
+
+    def release(self):
+        if self.contents:
+            self.contents.close()
