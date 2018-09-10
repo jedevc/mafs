@@ -59,7 +59,7 @@ class File:
 
 class _FileReader:
     def __init__(self, file_data, args):
-        self.contents = None
+        self.generator = None
         self.cache = bytes()
         self.encoding = file_data.read_encoding
 
@@ -72,18 +72,18 @@ class _FileReader:
             self.cache = contents.encode(self.encoding)
         except AttributeError:
             # generator or other iterable
-            self.contents = iter(contents)
+            self.generator = iter(contents)
 
     def read(self, length, offset):
         # read data into cache if provided by an iterable
-        while self.contents and len(self.cache) < offset + length:
+        while self.generator and len(self.cache) < offset + length:
             try:
-                part = next(self.contents)
+                part = next(self.generator)
                 if self.encoding:
                     part = part.encode(self.encoding)
                 self.cache += part
             except StopIteration:
-                self.contents = None
+                self.generator = None
 
         # provide requested data from the cache
         return self.cache[offset:offset + length]
@@ -93,7 +93,7 @@ class _FileReader:
 
 class _FileWriter:
     def __init__(self, file_data, args):
-        self.contents = None
+        self.generator = None
         self.callback = None
         self.cache = []
 
@@ -103,17 +103,17 @@ class _FileWriter:
             return
 
         try:
-            self.contents = file_data.write_callback(*args)
-            next(self.contents)
+            self.generator = file_data.write_callback(*args)
+            next(self.generator)
         except TypeError:
             self.callback = lambda contents: file_data.write_callback(*args, contents)
 
     def write(self, data, offset):
-        if self.contents:
+        if self.generator:
             # send data into generator if available
             if self.encoding:
                 data = data.decode(self.encoding)
-            self.contents.send((data, offset))
+            self.generator.send((data, offset))
         elif self.callback:
             # otherwise, build up the cache
             self.cache[offset:offset + len(data)] = data
@@ -121,9 +121,9 @@ class _FileWriter:
         return len(data)
 
     def release(self):
-        if self.contents:
+        if self.generator:
             # close generator if available
-            self.contents.close()
+            self.generator.close()
         elif self.callback:
             # otherwise finalize the cache and send it to the callback
             if self.cache:
