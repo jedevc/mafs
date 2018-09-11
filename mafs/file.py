@@ -60,6 +60,7 @@ class File:
 class _FileReader:
     def __init__(self, file_data, args):
         self.file = None
+        self.func = None
         self.generator = None
         self.cache = bytes()
         self.encoding = file_data.read_encoding
@@ -71,6 +72,9 @@ class _FileReader:
         if hasattr(contents, 'read') and hasattr(contents, 'write'):
             # file-like object
             self.file = contents
+        elif hasattr(contents, '__call__'):
+            # function
+            self.func = contents
         else:
             try:
                 # raw string
@@ -87,6 +91,9 @@ class _FileReader:
             if self.encoding:
                 data = data.encode(self.encoding)
             return data
+        elif self.func:
+            # get data from function
+            return self.func(length, offset)
         else:
             # read data into cache if provided by an iterable
             while self.generator and len(self.cache) < offset + length:
