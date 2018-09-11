@@ -114,7 +114,7 @@ class _FileReader:
 
 class _FileWriter:
     def __init__(self, file_data, args):
-        self.generator = None
+        self.func = None
         self.callback = None
         self.cache = []
 
@@ -124,17 +124,19 @@ class _FileWriter:
             return
 
         try:
-            self.generator = file_data.write_callback(*args)
-            next(self.generator)
+            func = file_data.write_callback(*args)
+            if hasattr(func, '__call__'):
+                self.func = func
         except TypeError:
+            pass
+
+        if not func:
             self.callback = lambda contents: file_data.write_callback(*args, contents)
 
     def write(self, data, offset):
-        if self.generator:
-            # send data into generator if available
-            if self.encoding:
-                data = data.decode(self.encoding)
-            self.generator.send((data, offset))
+        if self.func:
+            # send data to function if available
+            self.func(data, offset)
         elif self.callback:
             # otherwise, build up the cache
             self.cache[offset:offset + len(data)] = data
@@ -142,10 +144,7 @@ class _FileWriter:
         return len(data)
 
     def release(self):
-        if self.generator:
-            # close generator if available
-            self.generator.close()
-        elif self.callback:
-            # otherwise finalize the cache and send it to the callback
+        if self.callback:
+            # finalize the cache and send it to the callback
             if self.cache:
                 self.callback(bytes(self.cache).decode(self.encoding))
