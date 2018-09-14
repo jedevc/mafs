@@ -1,4 +1,5 @@
 import stat
+import inspect
 
 class FileData:
     def __init__(self, ftype=stat.S_IFREG):
@@ -42,14 +43,17 @@ class File:
     def __init__(self, file_data, args):
         self.data = file_data
 
-        read_contents = file_data.read_callback(*args)
-
         if self.data.read_callback:
+            read_contents = self.data.read_callback(*args)
             self.reader = FileReader.create(read_contents, self.data.read_encoding)
         else:
             self.reader = None
 
-        self.writer = _FileWriter(file_data, args)
+        if self.data.write_callback:
+            write_contents = self.data.write_callback(*args)
+            self.writer = FileWriter.create(write_contents, self.data.write_encoding)
+        else:
+            self.writer = None
 
     def read(self, length, offset):
         if self.reader:
@@ -155,39 +159,45 @@ class FileReader:
         def release(self):
             pass
 
-class _FileWriter:
-    def __init__(self, file_data, args):
-        self.func = None
-        self.callback = None
-        self.cache = []
+class FileWriter:
+    def create(contents, encoding):
+        for writer in [FileWriter.Function, FileWriter.Full]:
+            w = writer.create(contents, encoding)
+            if w:
+                return w
 
-        self.encoding = file_data.write_encoding
+    class Function:
+        def create(contents, encoding):
+            if hasattr(contents, '__call__') and _arg_count(contents) == 2:
+                return FileWriter.Function(contents)
 
-        if not file_data.write_callback:
-            return
+        def __init__(self, func):
+            self.func = func
 
-        try:
-            func = file_data.write_callback(*args)
-            if hasattr(func, '__call__'):
-                self.func = func
-        except TypeError:
+        def write(self, data, offset):
+            self.func(data, offset)
+            return len(data)
+
+        def release(self):
             pass
 
-        if not self.func:
-            self.callback = lambda contents: file_data.write_callback(*args, contents)
+    class Full:
+        def create(contents, encoding):
+            if hasattr(contents, '__call__') and _arg_count(contents) == 1:
+                return FileWriter.Full(contents, encoding)
 
-    def write(self, data, offset):
-        if self.func:
-            # send data to function if available
-            self.func(data, offset)
-        elif self.callback:
-            # otherwise, build up the cache
+        def __init__(self, callback, encoding):
+            self.callback = callback
+            self.encoding = encoding
+
+            self.cache = []
+
+        def write(self, data, offset):
             self.cache[offset:offset + len(data)] = data
+            return len(data)
 
-        return len(data)
+        def release(self):
+            self.callback(bytes(self.cache).decode(self.encoding))
 
-    def release(self):
-        if self.callback:
-            # finalize the cache and send it to the callback
-            if self.cache:
-                self.callback(bytes(self.cache).decode(self.encoding))
+def _arg_count(func):
+    return len(inspect.signature(func).parameters)
