@@ -1,3 +1,4 @@
+import os
 import stat
 import inspect
 
@@ -40,16 +41,16 @@ class FileData:
         self.write_encoding = encoding
 
 class File:
-    def __init__(self, file_data, args):
+    def __init__(self, file_data, args, flags):
         self.data = file_data
 
-        if self.data.read_callback:
+        if self.data.read_callback and flags & os.O_RDONLY == os.O_RDONLY:
             read_contents = self.data.read_callback(*args)
             self.reader = FileReader.create(read_contents, self.data.read_encoding)
         else:
             self.reader = None
 
-        if self.data.write_callback:
+        if self.data.write_callback and flags & os.O_WRONLY == os.O_WRONLY:
             write_contents = self.data.write_callback(*args)
             self.writer = FileWriter.create(write_contents, self.data.write_encoding)
         else:

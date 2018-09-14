@@ -77,7 +77,7 @@ class FileSystem(fuse.Operations):
             self.fh += 1
             fi.direct_io = True
 
-            self.open_files[fi.fh] = file.File(result.data, [path, result.parameters])
+            self.open_files[fi.fh] = file.File(result.data, [path, result.parameters], fi.flags)
 
             return 0
         else:
