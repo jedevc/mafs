@@ -44,13 +44,10 @@ class File:
 
         read_contents = file_data.read_callback(*args)
 
-        self.reader = None
         if self.data.read_callback:
-            for reader in [_FileReaderRaw, _FileReaderFile, _FileReaderFunction, _FileReaderIterable]:
-                r = reader.create(read_contents, self.data.read_encoding)
-                if r:
-                    self.reader = r
-                    break
+            self.reader = FileReader.create(read_contents, self.data.read_encoding)
+        else:
+            self.reader = None
 
         self.writer = _FileWriter(file_data, args)
 
@@ -68,88 +65,95 @@ class File:
         if self.writer:
             self.writer.release()
 
-class _FileReaderFile:
-    @staticmethod
+class FileReader:
     def create(contents, encoding):
-        if hasattr(contents, '__read__') and hasattr(contents, '__write__'):
-            return _FileReaderFile(contents, encoding)
+        for reader in [FileReader.Raw, FileReader.File, FileReader.Function, FileReader.Iterable]:
+            r = reader.create(contents, encoding)
+            if r:
+                return r
 
-    def __init__(self, file, encoding = None):
-        self.file = file
-        self.encoding = encoding
+    class File:
+        @staticmethod
+        def create(contents, encoding):
+            if hasattr(contents, '__read__') and hasattr(contents, '__write__'):
+                return FileReader.File(contents, encoding)
 
-    def read(self, length, offset):
-        self.file.seek(offset)
-        data = self.file.read(length)
-        if self.encoding:
-            data = self.encode(self.encoding)
-        return data
+        def __init__(self, file, encoding = None):
+            self.file = file
+            self.encoding = encoding
 
-    def release(self):
-        self.file.close()
+        def read(self, length, offset):
+            self.file.seek(offset)
+            data = self.file.read(length)
+            if self.encoding:
+                data = self.encode(self.encoding)
+            return data
 
-class _FileReaderFunction:
-    @staticmethod
-    def create(contents, encoding):
-        if hasattr(contents, '__call__'):
-            return _FileReaderFunction(contents, encoding)
+        def release(self):
+            self.file.close()
 
-    def __init__(self, func, encoding):
-        self.func = func
-        self.encoding = encoding
+    class Function:
+        @staticmethod
+        def create(contents, encoding):
+            if hasattr(contents, '__call__'):
+                return FileReader.Function(contents, encoding)
 
-    def read(self, length, offset):
-        return self.func(length, offset)
+        def __init__(self, func, encoding):
+            self.func = func
+            self.encoding = encoding
 
-    def release(self):
-        pass
+        def read(self, length, offset):
+            return self.func(length, offset)
 
-class _FileReaderIterable:
-    @staticmethod
-    def create(contents, encoding):
-        try:
-            return _FileReaderIterable(iter(contents), encoding)
-        except TypeError:
-            return None
+        def release(self):
+            pass
 
-    def __init__(self, iterable, encoding):
-        self.generator = iterable
-        self.cache = bytes()
-        self.encoding = encoding
-
-    def read(self, length, offset):
-        # read data into cache if provided by an iterable
-        while self.generator and len(self.cache) < offset + length:
+    class Iterable:
+        @staticmethod
+        def create(contents, encoding):
             try:
-                part = next(self.generator)
-                if self.encoding:
-                    part = part.encode(self.encoding)
-                self.cache += part
-            except StopIteration:
-                self.generator = None
+                return FileReader.Iterable(iter(contents), encoding)
+            except TypeError:
+                return None
 
-        # provide requested data from the cache
-        return self.cache[offset:offset + length]
+        def __init__(self, iterable, encoding):
+            self.generator = iterable
+            self.cache = bytes()
+            self.encoding = encoding
 
-    def release(self):
-        pass
+        def read(self, length, offset):
+            # read data into cache if provided by an iterable
+            while self.generator and len(self.cache) < offset + length:
+                try:
+                    part = next(self.generator)
+                    if self.encoding:
+                        part = part.encode(self.encoding)
+                    self.cache += part
+                except StopIteration:
+                    self.generator = None
 
-class _FileReaderRaw:
-    @staticmethod
-    def create(contents, encoding):
-        try:
-            return _FileReaderRaw(contents.encode(encoding))
-        except AttributeError:
-            return None
+            # provide requested data from the cache
+            return self.cache[offset:offset + length]
 
-    def __init__(self, contents):
-        self.contents = contents
+        def release(self):
+            pass
 
-    def read(self, length, offset):
-        return self.contents[offset:offset + length]
+    class Raw:
+        @staticmethod
+        def create(contents, encoding):
+            try:
+                return FileReader.Raw(contents.encode(encoding))
+            except AttributeError:
+                return None
 
-    def release(self):
-        pass
+        def __init__(self, contents):
+            self.contents = contents
+
+        def read(self, length, offset):
+            return self.contents[offset:offset + length]
+
+        def release(self):
+            pass
 
 class _FileWriter:
     def __init__(self, file_data, args):
