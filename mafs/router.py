@@ -9,6 +9,9 @@ class Router:
 
     def add(self, route, data):
         if route:
+            if self.final:
+                raise RoutingError('candidate node already has value stored')
+
             try:
                 first, rest = route.split('/', 1)
             except ValueError:
@@ -25,7 +28,10 @@ class Router:
                     self.routes[first] = Router()
                 self.routes[first].add(rest, data)
         else:
-            self.final = data
+            if self.routes or self.vroutes:
+                raise RoutingError('candidate node already has children')
+            else:
+                self.final = data
 
     def lookup(self, route):
         result = self.find(route)
@@ -57,6 +63,8 @@ class Router:
                 if result:
                     result.parameter(var, first)
                     return result
+
+            return None
         else:
             return Result(self)
 
@@ -65,7 +73,7 @@ class Result:
         self.data = data
 
         self._parameters = {}
-    
+
     def parameter(self, param, data):
         self._parameters[param] = data
 
@@ -73,3 +81,6 @@ class Result:
     def parameters(self):
         Parameters = namedtuple('Parameters', self._parameters.keys())
         return Parameters(**self._parameters)
+
+class RoutingError(Exception):
+    pass
