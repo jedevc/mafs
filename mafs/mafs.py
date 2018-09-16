@@ -29,8 +29,8 @@ class MagicFS:
     def onread(self, route, func, encoding='utf-8'):
         self.fs.onread(route, func, encoding)
 
-    def onwrite(self, route, func):
-        self.fs.onwrite(route, func)
+    def onwrite(self, route, func, encoding):
+        self.fs.onwrite(route, func, encoding)
 
     def onreadlink(self, route, func):
         self.fs.onreadlink(route, func)
@@ -38,17 +38,30 @@ class MagicFS:
     # Callbacks (decorators)
     # ======================
 
+    def file(self, route, encoding='utf-8'):
+        def decorator(cls):
+            if hasattr(cls, 'read'):
+                self.onread(route, cls.read, encoding)
+            if hasattr(cls, 'write'):
+                self.onwrite(route, cls.write, encoding)
+
+            return cls
+        return decorator
+
     def read(self, route, encoding='utf-8'):
         def decorator(func):
             self.onread(route, func, encoding)
+            return func
         return decorator
 
     def write(self, route, encoding='utf-8'):
         def decorator(func):
-            self.onwrite(route, func)
+            self.onwrite(route, func, encoding)
+            return func
         return decorator
 
     def readlink(self, route):
         def decorator(func):
             self.onreadlink(route, func)
+            return func
         return decorator
