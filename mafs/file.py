@@ -162,7 +162,7 @@ class FileReader:
 
 class FileWriter:
     def create(contents, encoding):
-        for writer in [FileWriter.Function, FileWriter.Full]:
+        for writer in [FileWriter.Function, FileWriter.Full, FileWriter.File]:
             w = writer.create(contents, encoding)
             if w:
                 return w
@@ -199,6 +199,21 @@ class FileWriter:
 
         def release(self):
             self.callback(bytes(self.cache).decode(self.encoding))
+
+    class File:
+        def create(contents, encoding):
+            if hasattr(contents, 'read') and hasattr(contents, 'write'):
+                return FileWriter.File(contents)
+
+        def __init__(self, file):
+            self.file = file
+
+        def write(self, data, offset):
+            self.file.seek(offset)
+            return self.file.write(data)
+
+        def release(self):
+            self.file.close()
 
 def _arg_count(func):
     return len(inspect.signature(func).parameters)
