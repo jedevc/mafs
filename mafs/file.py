@@ -77,6 +77,8 @@ class FileReader:
             if r:
                 return r
 
+        raise FileError(str(contents) + ' cannot be used as a file reader')
+
     class File:
         @staticmethod
         def create(contents, encoding):
@@ -167,6 +169,8 @@ class FileWriter:
             if w:
                 return w
 
+        raise FileError(str(contents) + ' cannot be used as a file writer')
+
     class Function:
         def create(contents, encoding):
             if hasattr(contents, '__call__') and _arg_count(contents) == 2:
@@ -214,6 +218,9 @@ class FileWriter:
 
         def release(self):
             self.file.close()
+
+class FileError(Exception):
+    pass
 
 def _arg_count(func):
     return len(inspect.signature(func).parameters)
