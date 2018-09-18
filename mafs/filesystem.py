@@ -13,6 +13,7 @@ from . import file
 class FileSystem(fuse.Operations):
     def __init__(self):
         self.router = router.Router()
+        self.list_router = router.Router()
         self.open_files = {}
 
         self.fh = 0
@@ -52,9 +53,15 @@ class FileSystem(fuse.Operations):
 
     def readdir(self, path, fi):
         dirs = ['.', '..']
-        contents = self.router.list(path)
-        if contents:
-            dirs.extend(contents.data)
+
+        ls = self.list_router.lookup(path)
+        if ls and ls.data:
+            contents = ls.data(path, ls.parameters)
+            dirs.extend(contents)
+        else:
+            contents = self.router.list(path)
+            if contents and contents.data:
+                dirs.extend(contents.data)
 
         return dirs
 
@@ -119,6 +126,9 @@ class FileSystem(fuse.Operations):
     def onwrite(self, path, callback, encoding='utf-8'):
         f = self._create_file(path)
         f.onwrite(callback, encoding)
+
+    def onlist(self, path, callback):
+        self.list_router.add(path, callback)
 
     def onstat(self, path, callback):
         f = self._create_file(path)
