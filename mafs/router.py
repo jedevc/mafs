@@ -34,20 +34,20 @@ class Router:
                 self.final = data
 
     def lookup(self, route):
-        result = self.find(route)
+        result = self._find(route)
         if result:
             result.data = result.data.final
         return result
 
     def list(self, route):
-        result = self.find(route)
+        result = self._find(route)
         if result:
             keys = result.data.routes.keys()
             keys = list(keys)
             result.data = keys
         return result
 
-    def find(self, route):
+    def _find(self, route):
         if route:
             try:
                 first, rest = route.split('/', 1)
@@ -56,10 +56,10 @@ class Router:
                 rest = None
 
             if first in self.routes:
-                return self.routes[first].find(rest)
+                return self.routes[first]._find(rest)
 
             for var in self.vroutes:
-                result = self.vroutes[var].find(rest)
+                result = self.vroutes[var]._find(rest)
                 if result:
                     result.parameter(var, first)
                     return result
