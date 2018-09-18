@@ -32,6 +32,9 @@ class MagicFS:
     def onwrite(self, route, func, encoding):
         self.fs.onwrite(route, func, encoding)
 
+    def onstat(self, route, func):
+        self.fs.onstat(route, func)
+
     def onreadlink(self, route, func):
         self.fs.onreadlink(route, func)
 
@@ -57,6 +60,12 @@ class MagicFS:
     def write(self, route, encoding='utf-8'):
         def decorator(func):
             self.onwrite(route, func, encoding)
+            return func
+        return decorator
+
+    def stat(self, route):
+        def decorator(func):
+            self.onstat(route, func)
             return func
         return decorator
 

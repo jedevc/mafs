@@ -1,10 +1,14 @@
 import os
+import fuse
 import stat
 import inspect
+import time
 
 class FileData:
     def __init__(self, ftype=stat.S_IFREG):
         self.get_callback = None
+
+        self.stat_callback = None
 
         self.read_callback = None
         self.read_encoding = None
@@ -13,6 +17,8 @@ class FileData:
         self.write_encoding = None
 
         self.ftype = ftype
+
+        self.timestamp = time.time()
 
     @property
     def mode(self):
@@ -27,10 +33,43 @@ class FileData:
             return self.ftype | 0o644
 
     def get(self, *args):
-        return self.get_callback(*args)
+        if self.get_callback:
+            return self.get_callback(*args)
+
+    def stat(self, *args):
+        # get data from callback if available
+        if self.stat_callback:
+            nstats = self.stat_callback(*args)
+            if not nstats:
+                return None
+        else:
+            nstats = {}
+
+        # create stats dictionary
+        uid, gid, _ = fuse.fuse_get_context()
+        stats = {
+            'st_atime': self.timestamp,
+            'st_ctime': self.timestamp,
+            'st_mtime': self.timestamp,
+
+            'st_gid': gid,
+            'st_uid': uid,
+
+            'st_mode': self.mode,
+            'st_nlink': 1,
+            'st_size': 0
+        }
+
+        if nstats:
+            return {**stats, **nstats}
+        else:
+            return stats
 
     def onget(self, callback):
         self.get_callback = callback
+
+    def onstat(self, callback):
+        self.stat_callback = callback
 
     def onread(self, callback, encoding='utf-8'):
         self.read_callback = callback

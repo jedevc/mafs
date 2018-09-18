@@ -26,26 +26,29 @@ class FileSystem(fuse.Operations):
         result = self.router.lookup(path)
         if result:
             if result.data:
-                mode = result.data.mode
+                # file
+                stats = result.data.stat(path, result.parameters)
+                if stats:
+                    return stats
             else:
-                mode = stat.S_IFDIR | 0o755
-        else:
-            raise fuse.FuseOSError(errno.ENOENT)
+                # directory
+                uid, gid, _ = fuse.fuse_get_context()
+                stats = {
+                    'st_atime': self.timestamp,
+                    'st_ctime': self.timestamp,
+                    'st_mtime': self.timestamp,
 
-        uid, gid, _ = fuse.fuse_get_context()
+                    'st_gid': gid,
+                    'st_uid': uid,
 
-        return {
-            'st_atime': self.timestamp,
-            'st_ctime': self.timestamp,
-            'st_mtime': self.timestamp,
+                    'st_mode': stat.S_IFDIR | 0o755,
+                    'st_nlink': 1,
+                    'st_size': 0
+                }
+                return stats
 
-            'st_gid': gid,
-            'st_uid': uid,
-
-            'st_mode': mode,
-            'st_nlink': 1,
-            'st_size': 0
-        }
+        # file not found
+        raise fuse.FuseOSError(errno.ENOENT)
 
     def readdir(self, path, fi):
         dirs = ['.', '..']
@@ -116,3 +119,7 @@ class FileSystem(fuse.Operations):
     def onwrite(self, path, callback, encoding='utf-8'):
         f = self._create_file(path)
         f.onwrite(callback, encoding)
+
+    def onstat(self, path, callback):
+        f = self._create_file(path)
+        f.onstat(callback)
