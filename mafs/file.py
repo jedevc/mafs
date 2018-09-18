@@ -118,10 +118,27 @@ class FileReader:
 
         raise FileError(str(contents) + ' cannot be used as a file reader')
 
+    class Raw:
+        @staticmethod
+        def create(contents, encoding):
+            try:
+                return FileReader.Raw(contents.encode(encoding))
+            except AttributeError:
+                return None
+
+        def __init__(self, contents):
+            self.contents = contents
+
+        def read(self, length, offset):
+            return self.contents[offset:offset + length]
+
+        def release(self):
+            pass
+
     class File:
         @staticmethod
         def create(contents, encoding):
-            if hasattr(contents, '__read__') and hasattr(contents, '__write__'):
+            if hasattr(contents, 'read') and hasattr(contents, 'write'):
                 return FileReader.File(contents, encoding)
 
         def __init__(self, file, encoding = None):
@@ -132,7 +149,7 @@ class FileReader:
             self.file.seek(offset)
             data = self.file.read(length)
             if self.encoding:
-                data = self.encode(self.encoding)
+                data = data.encode(self.encoding)
             return data
 
         def release(self):
@@ -141,7 +158,7 @@ class FileReader:
     class Function:
         @staticmethod
         def create(contents, encoding):
-            if hasattr(contents, '__call__'):
+            if hasattr(contents, '__call__') and _arg_count(contents) == 2:
                 return FileReader.Function(contents, encoding)
 
         def __init__(self, func, encoding):
@@ -184,22 +201,6 @@ class FileReader:
         def release(self):
             pass
 
-    class Raw:
-        @staticmethod
-        def create(contents, encoding):
-            try:
-                return FileReader.Raw(contents.encode(encoding))
-            except AttributeError:
-                return None
-
-        def __init__(self, contents):
-            self.contents = contents
-
-        def read(self, length, offset):
-            return self.contents[offset:offset + length]
-
-        def release(self):
-            pass
 
 class FileWriter:
     def create(contents, encoding):
