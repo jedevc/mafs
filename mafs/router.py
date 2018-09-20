@@ -44,8 +44,8 @@ class Node:
 
     def add(self, route, data):
         if route:
-            if self.final:
-                raise RoutingError('candidate node already has value stored')
+            # if self.final:
+            #     raise RoutingError('candidate node already has value stored')
 
             first, rest = route[0], route[1:]
 
@@ -64,10 +64,11 @@ class Node:
                     self.routes[first] = Node()
                 self.routes[first].add(rest, data)
         else:
-            if self.routes or self.vroutes or self.rroutes:
-                raise RoutingError('candidate node already has children')
-            else:
-                self.final = data
+            # if self.routes or self.vroutes or self.rroutes:
+            #     raise RoutingError('candidate node already has children')
+            # else:
+            #     self.final = data
+            self.final = data
 
     def find(self, route):
         if route:

@@ -1,1 +1,1 @@
-from .mafs import MagicFS
+from .mafs import *

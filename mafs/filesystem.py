@@ -29,13 +29,11 @@ class FileSystem(fuse.Operations):
         if result:
             if result.data:
                 # file
-                stats = result.data.stat(path, result.parameters)
-                if stats:
-                    return stats
+                return result.data.stat(path, result.parameters)
             else:
                 # directory
                 uid, gid, _ = fuse.fuse_get_context()
-                stats = {
+                return {
                     'st_atime': self.timestamp,
                     'st_ctime': self.timestamp,
                     'st_mtime': self.timestamp,
@@ -47,7 +45,6 @@ class FileSystem(fuse.Operations):
                     'st_nlink': 1,
                     'st_size': 0
                 }
-                return stats
 
         # file not found
         raise fuse.FuseOSError(errno.ENOENT)

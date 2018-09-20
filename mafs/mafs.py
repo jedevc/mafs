@@ -1,4 +1,5 @@
 import fuse
+import errno
 
 import argparse
 
@@ -83,3 +84,7 @@ class MagicFS:
             self.onreadlink(route, func)
             return func
         return decorator
+
+class FileNotFoundError(fuse.FuseOSError):
+    def __init__(self):
+        super().__init__(errno.ENOENT)

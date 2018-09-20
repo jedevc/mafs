@@ -1,7 +1,7 @@
-from mafs import MagicFS
+import mafs
 import stat
 
-fs = MagicFS()
+fs = mafs.MagicFS()
 
 items = {
     'a': 1,
@@ -44,6 +44,8 @@ def stat_item(path, ps):
         if hasattr(item, 'get'):
             return { 'st_mode': 0o755 | stat.S_IFDIR }
         else:
-            return { 'st_mode': 0o444 | stat.S_IFREG }
+            return {}
+
+    raise mafs.FileNotFoundError()
 
 fs.run()

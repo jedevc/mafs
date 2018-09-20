@@ -37,13 +37,11 @@ class FileData:
             return self.get_callback(*args)
 
     def stat(self, *args):
+        nstats = {}
+
         # get data from callback if available
         if self.stat_callback:
             nstats = self.stat_callback(*args)
-            if not nstats:
-                return None
-        else:
-            nstats = {}
 
         # create stats dictionary
         uid, gid, _ = fuse.fuse_get_context()
