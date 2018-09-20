@@ -12,6 +12,7 @@ from . import file
 
 class FileSystem(fuse.Operations):
     def __init__(self):
+        self.files = {}
         self.router = router.Router()
         self.list_router = router.Router()
         self.open_files = {}
@@ -107,11 +108,11 @@ class FileSystem(fuse.Operations):
     # =========
 
     def _create_file(self, path, *args, **kwargs):
-        result = self.router.lookup(path)
-        if result and result.data:
-            return result.data
+        if path in self.files:
+            return self.files[path]
         else:
             fd = file.FileData(*args, **kwargs)
+            self.files[path] = fd
             self.router.add(path, fd)
             return fd
 
