@@ -2,6 +2,40 @@ from collections import namedtuple
 
 class Router:
     def __init__(self):
+        self.root = Node()
+
+    def add(self, route, data):
+        route = self._split_route(route)
+
+        self.root.add(route, data)
+
+    def lookup(self, route):
+        route = self._split_route(route)
+
+        result = self.root.find(route)
+        if result:
+            result.data = result.data.final
+        return result
+
+    def list(self, route):
+        route = self._split_route(route)
+
+        result = self.root.find(route)
+        if result:
+            keys = result.data.routes.keys()
+            keys = list(keys)
+            result.data = keys
+        return result
+
+    def _split_route(self, route):
+        if route == '/':
+            return []
+        else:
+            route = route.strip('/')
+            return route.split('/')
+
+class Node:
+    def __init__(self):
         self.final = None
 
         self.routes = {}
@@ -12,20 +46,16 @@ class Router:
             if self.final:
                 raise RoutingError('candidate node already has value stored')
 
-            try:
-                first, rest = route.split('/', 1)
-            except ValueError:
-                first = route
-                rest = None
+            first, rest = route[0], route[1:]
 
             if first.startswith(':'):
                 first = first[1:]
                 if first not in self.vroutes:
-                    self.vroutes[first] = Router()
+                    self.vroutes[first] = Node()
                 self.vroutes[first].add(rest, data)
             else:
                 if first not in self.routes:
-                    self.routes[first] = Router()
+                    self.routes[first] = Node()
                 self.routes[first].add(rest, data)
         else:
             if self.routes or self.vroutes:
@@ -33,33 +63,15 @@ class Router:
             else:
                 self.final = data
 
-    def lookup(self, route):
-        result = self._find(route)
-        if result:
-            result.data = result.data.final
-        return result
-
-    def list(self, route):
-        result = self._find(route)
-        if result:
-            keys = result.data.routes.keys()
-            keys = list(keys)
-            result.data = keys
-        return result
-
-    def _find(self, route):
+    def find(self, route):
         if route:
-            try:
-                first, rest = route.split('/', 1)
-            except:
-                first = route
-                rest = None
+            first, rest = route[0], route[1:]
 
             if first in self.routes:
-                return self.routes[first]._find(rest)
+                return self.routes[first].find(rest)
 
             for var in self.vroutes:
-                result = self.vroutes[var]._find(rest)
+                result = self.vroutes[var].find(rest)
                 if result:
                     result.parameter(var, first)
                     return result
