@@ -68,7 +68,9 @@ class Node:
             first, rest = route[0], route[1:]
 
             if first in self.routes:
-                return self.routes[first].find(rest)
+                result = self.routes[first].find(rest)
+                if result:
+                    return result
 
             for var in self.vroutes:
                 result = self.vroutes[var].find(rest)
