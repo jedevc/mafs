@@ -40,6 +40,7 @@ class Node:
 
         self.routes = {}
         self.vroutes = {}
+        self.rroutes = {}
 
     def add(self, route, data):
         if route:
@@ -53,12 +54,17 @@ class Node:
                 if first not in self.vroutes:
                     self.vroutes[first] = Node()
                 self.vroutes[first].add(rest, data)
+            elif first.startswith('*'):
+                first = first[1:]
+                if first not in self.rroutes:
+                    self.rroutes[first] = Node()
+                self.rroutes[first].add(rest, data)
             else:
                 if first not in self.routes:
                     self.routes[first] = Node()
                 self.routes[first].add(rest, data)
         else:
-            if self.routes or self.vroutes:
+            if self.routes or self.vroutes or self.rroutes:
                 raise RoutingError('candidate node already has children')
             else:
                 self.final = data
@@ -77,6 +83,22 @@ class Node:
                 if result:
                     result.parameter(var, first)
                     return result
+
+            for var in self.rroutes:
+                vals = []
+                while rest:
+                    result = self.rroutes[var].find(rest)
+                    if result:
+                        result.parameter(var, vals)
+                        return result
+
+                    vals.append(first)
+                    first, rest = rest[0], rest[1:]
+
+                vals.append(first)
+                result = Result(self.rroutes[var])
+                result.parameter(var, vals)
+                return result
 
             return None
         else:
