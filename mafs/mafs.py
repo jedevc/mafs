@@ -1,4 +1,5 @@
 import fuse
+import stat
 import errno
 
 import argparse
@@ -88,3 +89,14 @@ class MagicFS:
 class FileNotFoundError(fuse.FuseOSError):
     def __init__(self):
         super().__init__(errno.ENOENT)
+
+class FileType:
+    REGULAR = stat.S_IFREG
+
+    DIRECTORY = stat.S_IFDIR
+    FOLDER = stat.S_IFDIR
+
+    LINK = stat.S_IFLNK
+
+def Mode(ftype, access):
+    return ftype | access
