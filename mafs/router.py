@@ -81,12 +81,13 @@ class Node:
             for var in self.rroutes:
                 vals = []
                 while rest:
+                    vals.append(first)
+
                     result = self.rroutes[var].find(rest)
                     if result:
                         result.parameter(var, vals)
                         return result
 
-                    vals.append(first)
                     first, rest = rest[0], rest[1:]
 
                 vals.append(first)
