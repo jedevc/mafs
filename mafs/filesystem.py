@@ -5,6 +5,8 @@ import stat
 import sys
 import errno
 
+from enum import Enum
+
 import time
 
 from . import router
@@ -12,10 +14,9 @@ from . import file
 
 class FileSystem(fuse.Operations):
     def __init__(self):
-        self.files = {}
-        self.router = router.Router()
-        self.list_router = router.Router()
-        self.open_files = {}
+        self.routers = {method: router.Router() for method in Method}
+        self.readers = {}
+        self.writers = {}
 
         self.fh = 0
 
@@ -25,48 +26,68 @@ class FileSystem(fuse.Operations):
     # ==================
 
     def getattr(self, path, fi=None):
-        result = self.router.lookup(path)
-        if result:
-            if result.data:
-                # file
-                return result.data.stat(path, result.parameters)
+        reader = self.routers[Method.READ].lookup(path)
+        writer = self.routers[Method.WRITE].lookup(path)
+
+        # FIXME: alert when reader and writer contradict each other
+        if reader and reader.data or writer and writer.data:
+            ftype = stat.S_IFREG
+            permissions = 0
+            if reader and reader.data:
+                permissions |= stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+            if writer and writer.data:
+                permissions |= stat.S_IWUSR
+        elif reader or writer:
+            ftype = stat.S_IFDIR
+            permissions = 0o755
+        else:
+            link = self.routers[Method.READLINK].lookup(path)
+            if link and link.data:
+                ftype = stat.S_IFLNK
+                permissions = 0o755
             else:
-                # directory
-                uid, gid, _ = fuse.fuse_get_context()
-                return {
-                    'st_atime': self.timestamp,
-                    'st_ctime': self.timestamp,
-                    'st_mtime': self.timestamp,
+                raise fuse.FuseOSError(errno.ENOENT)
 
-                    'st_gid': gid,
-                    'st_uid': uid,
+        uid, gid, _ = fuse.fuse_get_context()
+        base = {
+            'st_atime': self.timestamp,
+            'st_ctime': self.timestamp,
+            'st_mtime': self.timestamp,
 
-                    'st_mode': stat.S_IFDIR | 0o755,
-                    'st_nlink': 1,
-                    'st_size': 0
-                }
+            'st_gid': gid,
+            'st_uid': uid,
 
-        # file not found
-        raise fuse.FuseOSError(errno.ENOENT)
+            'st_mode': ftype | permissions,
+            'st_nlink': 1,
+            'st_size': 0
+        }
+
+        statter = self.routers[Method.STAT].lookup(path)
+        if statter and statter.data:
+            contents = statter.data(path, statter.parameters)
+            return {**base, **contents}
+        else:
+            return base
 
     def readdir(self, path, fi):
-        dirs = ['.', '..']
+        dirs = set(['.', '..'])
 
-        ls = self.list_router.lookup(path)
+        ls = self.routers[Method.LIST].lookup(path)
         if ls and ls.data:
             contents = ls.data(path, ls.parameters)
-            dirs.extend(contents)
+            dirs.update(contents)
         else:
-            contents = self.router.list(path)
-            if contents and contents.data:
-                dirs.extend(contents.data)
+            for method in (Method.READ, Method.WRITE, Method.READLINK):
+                contents = self.routers[method].list(path)
+                if contents and contents.data:
+                    dirs.update(contents.data)
 
         return dirs
 
     def readlink(self, path):
-        result = self.router.lookup(path)
+        result = self.routers[Method.READLINK].lookup(path)
         if result:
-            return result.data.get(path, result.parameters)
+            return result.data(path, result.parameters)
 
     def truncate(self, path, length, fi=None):
         pass
@@ -79,55 +100,70 @@ class FileSystem(fuse.Operations):
         if fi.flags & os.O_APPEND == os.O_APPEND:
             return -1
 
-        result = self.router.lookup(path)
-        if result and result.data:
+        reader = self.routers[Method.READ].lookup(path)
+        writer = self.routers[Method.WRITE].lookup(path)
+
+        success = False
+
+        if fi.flags & os.O_RDONLY == os.O_RDONLY and reader and reader.data:
+            callback, encoding = reader.data
+            contents = callback(path, reader.parameters)
+            self.readers[self.fh] = file.FileReader.create(contents, encoding)
+
+            success = True
+
+        if fi.flags & os.O_WRONLY == os.O_WRONLY and writer and writer.data:
+            callback, encoding = writer.data
+            contents = callback(path, writer.parameters)
+            self.writers[self.fh] = file.FileWriter.create(contents, encoding)
+
+            success = True
+
+        if success:
             fi.fh = self.fh
             self.fh += 1
             fi.direct_io = True
-
-            self.open_files[fi.fh] = file.File(result.data, [path, result.parameters], fi.flags)
 
             return 0
         else:
             return -1
 
     def read(self, path, length, offset, fi):
-        return self.open_files[fi.fh].read(length, offset)
+        return self.readers[fi.fh].read(length, offset)
 
     def write(self, path, data, offset, fi):
-        return self.open_files[fi.fh].write(data, offset)
+        return self.writers[fi.fh].write(data, offset)
 
     def release(self, path, fi):
-        file = self.open_files.pop(fi.fh)
-        file.release()
+        if fi.fh in self.readers:
+            reader = self.readers.pop(fi.fh)
+            reader.release()
+
+        if fi.fh in self.writers:
+            writer = self.writers.pop(fi.fh)
+            writer.release()
 
     # Callbacks
     # =========
 
-    def _create_file(self, path, *args, **kwargs):
-        if path in self.files:
-            return self.files[path]
-        else:
-            fd = file.FileData(*args, **kwargs)
-            self.files[path] = fd
-            self.router.add(path, fd)
-            return fd
+    def onstat(self, path, callback):
+        self.routers[Method.STAT].add(path, callback)
 
     def onread(self, path, callback, encoding='utf-8'):
-        f = self._create_file(path)
-        f.onread(callback, encoding)
-
-    def onreadlink(self, path, callback):
-        f = self._create_file(path, ftype=stat.S_IFLNK)
-        f.onget(callback)
+        self.routers[Method.READ].add(path, (callback, encoding))
 
     def onwrite(self, path, callback, encoding='utf-8'):
-        f = self._create_file(path)
-        f.onwrite(callback, encoding)
+        self.routers[Method.WRITE].add(path, (callback, encoding))
+
+    def onreadlink(self, path, callback):
+        self.routers[Method.READLINK].add(path, callback)
 
     def onlist(self, path, callback):
-        self.list_router.add(path, callback)
+        self.routers[Method.LIST].add(path, callback)
 
-    def onstat(self, path, callback):
-        f = self._create_file(path)
-        f.onstat(callback)
+class Method(Enum):
+    STAT = 0
+    READ = 1
+    WRITE = 2
+    READLINK = 3
+    LIST = 4

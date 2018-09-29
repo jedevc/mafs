@@ -61,6 +61,8 @@ class Node:
                     self.routes[first] = Node()
                 self.routes[first].add(rest, data)
         else:
+            if self.final:
+                raise RoutingError('node already has assigned value')
             self.final = data
 
     def find(self, route):
