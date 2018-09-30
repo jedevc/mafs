@@ -65,9 +65,10 @@ class FileSystem(fuse.Operations):
         statter = self.routers[Method.STAT].lookup(path)
         if statter and statter.data:
             contents = statter.data(path, statter.parameters)
-            return {**base, **contents}
-        else:
-            return base
+            if contents:
+                return {**base, **contents}
+
+        return base
 
     def readdir(self, path, fi):
         dirs = set(['.', '..'])
