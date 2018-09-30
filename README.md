@@ -1,18 +1,28 @@
 # MagicFS (mafs)
 
-MagicFS is a simple-to-use tool that allows you to easily create virtual
+**NOTE**: MagicFS is not completely ready to use yet. There may be critical
+bugs, and many features are still incomplete.
+
+--------------------------------------------------------------------------------
+
+MagicFS is an easy-to-use library that allows anyone to easily create virtual
 filesystems using FUSE.
 
-If you've ever wanted to play around with filesystems, but have been put off by
-the complexity of libfuse, this library could be for you. You can easily create
-whole, feature-complete filesystems in just a few lines of code. No need for
-painstakingly dealing with folder structures and buffers, mafs manages all the
-low-level details, provides sane defaults, and lets you focus on functionality.
+MagicFS allows you to redirect file requests, so instead of the request going to
+an underlying storage medium like a hard drive, the request goes to a program
+that you've written.
+
+If you like the idea of playing around with virtual filesystems, but have been
+put off by the complexity of it all, then this library could be for you. You can
+easily create whole, feature-complete filesystems in just a few lines of code.
+No need for painstakingly dealing with folder structures and buffers, mafs
+manages all the low-level details, provides sane defaults, and lets you focus on
+the functionality.
 
 ## Installation
 
-MagicFS is available on [pypi](https://pypi.org/project/mafs/), and is easily
-installable with pip.
+MagicFS is available on [pypi](https://pypi.org/project/mafs/), and can be
+easily installed with pip.
 
 	$ pip3 install mafs
 
@@ -42,3 +52,11 @@ To download MagicFS for development, execute the following commands:
 	$ git clone https://github.com/jedevc/mafs.git
 	$ cd mafs
 	$ pip3 install -r requirements.txt
+
+To launch mafs with an example, execute the following:
+
+	$ PYTHONPATH=. python3 examples/places.py fs -fg
+
+Note the use of the ```PYTHONPATH``` environment variable to include the
+library, and the use of the ```-fg``` flag to run mafs in the foreground for
+easier debugging.
