@@ -1,10 +1,5 @@
 # MagicFS (mafs)
 
-**NOTE**: MagicFS is not completely ready to use yet. There may be critical
-bugs, and many features are still incomplete.
-
---------------------------------------------------------------------------------
-
 MagicFS is an easy-to-use library that allows anyone to easily create virtual
 filesystems using FUSE.
 
