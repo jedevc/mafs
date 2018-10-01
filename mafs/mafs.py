@@ -23,6 +23,12 @@ class MagicFS:
     e.g. /foo/:var which matches any file in the directory /foo. Finally, it
     can contain recursive variables which match at least one directory, e.g.
     /foo/*var, which matches any file in /foo, such as /foo/bar or /foo/bar/baz.
+
+    Callbacks
+    =========
+    Functions provided as callbacks should return different data types depending
+    on what kind of action they perform. For specific details, see the
+    documentatation for each callback register.
     '''
 
     def __init__(self):
