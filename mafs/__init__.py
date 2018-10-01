@@ -1,4 +1,4 @@
-__all__ = ['MagicFS', 'FileNotFoundError', 'FileType', 'Mode']
+__all__ = ['MagicFS', 'FileNotFoundError', 'FileType']
 
 from .mafs import MagicFS
-from .mafs import FileNotFoundError, FileType, Mode
+from .mafs import FileNotFoundError, FileType

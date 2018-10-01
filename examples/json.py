@@ -1,5 +1,4 @@
 import mafs
-import stat
 
 fs = mafs.MagicFS()
 
@@ -42,7 +41,7 @@ def stat_item(path, ps):
 
     if item:
         if hasattr(item, 'get'):
-            return { 'st_mode': 0o755 | stat.S_IFDIR }
+            return { 'st_mode': 0o755 | mafs.FileType.DIRECTORY }
         else:
             return {}
 
