@@ -52,6 +52,6 @@ To launch mafs with an example, execute the following:
 
 	$ PYTHONPATH=. python3 examples/places.py fs -fg
 
-Note the use of the ```PYTHONPATH``` environment variable to include the
-library, and the use of the ```-fg``` flag to run mafs in the foreground for
+Note the use of the `PYTHONPATH` environment variable to include the
+library, and the use of the `-fg` flag to run mafs in the foreground for
 easier debugging.
