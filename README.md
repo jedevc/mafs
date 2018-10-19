@@ -55,3 +55,13 @@ To launch mafs with an example, execute the following:
 Note the use of the `PYTHONPATH` environment variable to include the
 library, and the use of the `-fg` flag to run mafs in the foreground for
 easier debugging.
+
+### Tests
+
+To run the tests for MagicFS, install nose, and then use it to run the tests.
+
+	$ pip install nose
+	$ nosetests
+
+If you make any changes, please run the tests before you commit to ensure that
+you haven't broken anything.
