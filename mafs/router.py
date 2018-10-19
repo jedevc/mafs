@@ -1,3 +1,5 @@
+import os
+
 from collections import namedtuple
 
 class Router:
@@ -28,6 +30,7 @@ class Router:
         return result
 
     def _split_route(self, route):
+        route = os.path.normpath(route)
         if route == '/':
             return []
         else:
