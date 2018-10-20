@@ -28,7 +28,10 @@ def stat(path, ps):
         'st_nlink': stat.st_nlink,
         'st_uid': stat.st_uid,
         'st_gid': stat.st_gid,
-        'st_size': stat.st_size
+        'st_size': stat.st_size,
+        'st_atime': stat.st_atime,
+        'st_mtime': stat.st_mtime,
+        'st_ctime': stat.st_ctime
     }
 
 @fs.list('/')
