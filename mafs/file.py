@@ -142,13 +142,16 @@ class FileWriter:
     class File:
         def create(contents, encoding):
             if hasattr(contents, 'read') and hasattr(contents, 'write'):
-                return FileWriter.File(contents)
+                return FileWriter.File(contents, encoding)
 
-        def __init__(self, file):
+        def __init__(self, file, encoding):
             self.file = file
+            self.encoding = encoding
 
         def write(self, data, offset):
             self.file.seek(offset)
+            if self.encoding:
+                data = data.decode(self.encoding)
             return self.file.write(data)
 
         def release(self):
