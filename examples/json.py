@@ -45,6 +45,6 @@ def stat_item(path, ps):
         else:
             return {}
 
-    raise mafs.FileNotFoundError()
+    raise FileNotFoundError()
 
 fs.run()

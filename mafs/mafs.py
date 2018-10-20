@@ -112,6 +112,9 @@ class MagicFS:
 
         Note that for 'st_mode', you should use the bitwise 'or' to combine the
         file type and the file permissions, e.g. FileType.REGULAR | 0o644.
+
+        If the callback throws a FileNotFoundException, it will be interpreted
+        as a sign that the indicated file does not exist.
         '''
 
         self.fs.onstat(route, func)
@@ -205,14 +208,6 @@ class MagicFS:
             self.onreadlink(route, func)
             return func
         return decorator
-
-class FileNotFoundError(fuse.FuseOSError):
-    '''
-    An error that should be thrown if the file does not exist.
-    '''
-
-    def __init__(self):
-        super().__init__(errno.ENOENT)
 
 class FileType:
     '''

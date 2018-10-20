@@ -46,6 +46,7 @@ class FileSystem(fuse.Operations):
                 ftype = stat.S_IFLNK
                 permissions = 0o755
             else:
+                # cannot find in router
                 raise fuse.FuseOSError(errno.ENOENT)
 
         uid, gid, _ = fuse.fuse_get_context()
@@ -64,7 +65,11 @@ class FileSystem(fuse.Operations):
 
         statter = self.routers[Method.STAT].lookup(path)
         if statter and statter.data:
-            contents = statter.data(path, statter.parameters)
+            try:
+                contents = statter.data(path, statter.parameters)
+            except FileNotFoundError:
+                raise fuse.FuseOSError(errno.ENOENT)
+
             if contents:
                 return {**base, **contents}
 
@@ -76,6 +81,7 @@ class FileSystem(fuse.Operations):
         ls = self.routers[Method.LIST].lookup(path)
         if ls and ls.data:
             contents = ls.data(path, ls.parameters)
+
             dirs.update(contents)
         else:
             for method in (Method.READ, Method.WRITE, Method.READLINK):
@@ -109,6 +115,7 @@ class FileSystem(fuse.Operations):
         if fi.flags & os.O_RDONLY == os.O_RDONLY and reader and reader.data:
             callback, encoding = reader.data
             contents = callback(path, reader.parameters)
+
             self.readers[self.fh] = file.FileReader.create(contents, encoding)
 
             success = True
@@ -116,6 +123,7 @@ class FileSystem(fuse.Operations):
         if fi.flags & os.O_WRONLY == os.O_WRONLY and writer and writer.data:
             callback, encoding = writer.data
             contents = callback(path, writer.parameters)
+
             self.writers[self.fh] = file.FileWriter.create(contents, encoding)
 
             success = True
