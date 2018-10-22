@@ -1,16 +1,13 @@
 import mafs
 
-fs = mafs.MagicFS()
+import json
 
-items = {
-    'a': 1,
-    'b': 2,
-    'c': 3,
-    'd': {
-        'e': 4,
-        'f': 5
-    }
-}
+fs = mafs.MagicFS()
+fs.add_argument('file', help='json file to read from')
+
+# read json file
+with open(fs.args.file) as f:
+    items = json.load(f)
 
 def dig(d, parts):
     if parts:

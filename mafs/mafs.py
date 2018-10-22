@@ -34,21 +34,8 @@ class MagicFS:
     def __init__(self):
         self.fs = filesystem.FileSystem()
 
-    def run(self):
-        '''
-        Mount the filesystem using options provided at the command line.
-        '''
-
-        parser = argparse.ArgumentParser()
-        parser.add_argument('mountpoint',
-                help='folder to mount the filesystem in')
-        parser.add_argument('-fg', '--foreground', action='store_true',
-                help='run in the foreground')
-        parser.add_argument('-t', '--threads', action='store_true',
-                help='allow the use of threads')
-        args = parser.parse_args()
-
-        self.mount(args.mountpoint, args.foreground, args.threads)
+        self._user_args = []
+        self._args = None
 
     def mount(self, mountpoint, foreground=False, threads=False):
         '''
@@ -57,6 +44,41 @@ class MagicFS:
 
         fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=not threads,
                 foreground=foreground, default_permissions=True)
+
+    def run(self):
+        '''
+        Mount the filesystem using options provided at the command line.
+        '''
+
+        args = self.args
+        self.mount(args.mountpoint, args.foreground, args.threads)
+
+    def add_argument(self, *args, **kwargs):
+        '''
+        Add command line arguments for the run() method.
+
+        Each argument is not operated on now, but stored to be added later.
+        '''
+
+        self._user_args.append((args, kwargs))
+
+    @property
+    def args(self):
+        if not self._args:
+            parser = argparse.ArgumentParser()
+            parser.add_argument('mountpoint',
+                    help='folder to mount the filesystem in')
+            parser.add_argument('-fg', '--foreground', action='store_true',
+                    help='run in the foreground')
+            parser.add_argument('-t', '--threads', action='store_true',
+                    help='allow the use of threads')
+
+            for (args, kwargs) in self._user_args:
+                parser.add_argument(*args, **kwargs)
+
+            self._args = parser.parse_args()
+
+        return self._args
 
     # Callbacks
     # =========
