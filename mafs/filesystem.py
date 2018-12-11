@@ -8,6 +8,7 @@ import errno
 from enum import Enum
 
 import time
+import itertools
 
 from . import router
 from . import file
@@ -81,13 +82,12 @@ class FileSystem(fuse.Operations):
         ls = self.routers[Method.LIST].lookup(path)
         if ls and ls.data:
             contents = ls.data(path, ls.parameters)
-
-            dirs.update(contents)
+            return itertools.chain(dirs, contents)
         else:
             for method in (Method.READ, Method.WRITE, Method.READLINK):
                 contents = self.routers[method].list(path)
                 if contents and contents.data:
-                    dirs.update(contents.data)
+                    return itertools.chain(dirs, contents.data)
 
         return dirs
 
