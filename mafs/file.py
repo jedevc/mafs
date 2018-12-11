@@ -1,8 +1,10 @@
 import os
+import errno
 import fuse
 import stat
 import inspect
 import time
+import itertools
 
 class FileReader:
     def create(contents, encoding):
@@ -133,11 +135,19 @@ class FileWriter:
             self.cache = []
 
         def write(self, data, offset):
+            # extend cache size
+            ldiff = len(self.cache) - len(data)
+            if ldiff < 0:
+                self.cache.extend(itertools.count(-1, ldiff))
+
             self.cache[offset:offset + len(data)] = data
             return len(data)
 
         def release(self):
-            self.callback(bytes(self.cache).decode(self.encoding))
+            try:
+                self.callback(bytes(self.cache).decode(self.encoding))
+            except ValueError:
+                raise FuseOSError(errno.EIO)
 
     class File:
         def create(contents, encoding):

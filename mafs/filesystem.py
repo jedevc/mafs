@@ -103,10 +103,6 @@ class FileSystem(fuse.Operations):
     # ============
 
     def open(self, path, fi):
-        # forbid append operation
-        if fi.flags & os.O_APPEND == os.O_APPEND:
-            return -1
-
         reader = self.routers[Method.READ].lookup(path)
         writer = self.routers[Method.WRITE].lookup(path)
 
