@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='mafs',
-    version='0.1',
+    version='0.2',
     license='MIT',
 
     author='Justin Chadwell',
