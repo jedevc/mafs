@@ -88,6 +88,7 @@ class MagicFS:
         Register a callback for read requests.
 
         The callback can return:
+            - None
             - a string
             - an iterable (or generator)
             - a readable file object
@@ -102,6 +103,7 @@ class MagicFS:
         Register a callback for write requests.
 
         The callback can return:
+            - None
             - a writable file object
             - a function taking one parameter, the string to write
             - a function taking two parameters, a byte string and offset

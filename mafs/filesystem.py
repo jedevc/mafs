@@ -112,7 +112,8 @@ class FileSystem(fuse.Operations):
             callback, encoding = reader.data
             contents = callback(path, reader.parameters)
 
-            self.readers[self.fh] = file.FileReader.create(contents, encoding)
+            if contents:
+                self.readers[self.fh] = file.FileReader.create(contents, encoding)
 
             success = True
 
@@ -120,7 +121,8 @@ class FileSystem(fuse.Operations):
             callback, encoding = writer.data
             contents = callback(path, writer.parameters)
 
-            self.writers[self.fh] = file.FileWriter.create(contents, encoding)
+            if contents:
+                self.writers[self.fh] = file.FileWriter.create(contents, encoding)
 
             success = True
 
@@ -134,10 +136,14 @@ class FileSystem(fuse.Operations):
             return -1
 
     def read(self, path, length, offset, fi):
-        return self.readers[fi.fh].read(length, offset)
+        if fi.fh in self.readers:
+            return self.readers[fi.fh].read(length, offset)
 
     def write(self, path, data, offset, fi):
-        return self.writers[fi.fh].write(data, offset)
+        if fi.fh in self.writers:
+            return self.writers[fi.fh].write(data, offset)
+        else:
+            return len(data)
 
     def release(self, path, fi):
         if fi.fh in self.readers:
