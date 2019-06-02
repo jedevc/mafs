@@ -2,6 +2,7 @@ import os
 
 from collections import namedtuple
 
+
 class Router:
     def __init__(self):
         self.root = Node()
@@ -36,6 +37,7 @@ class Router:
         else:
             route = route.strip('/')
             return route.split('/')
+
 
 class Node:
     def __init__(self):
@@ -104,6 +106,7 @@ class Node:
         else:
             return Result(self)
 
+
 class Result:
     def __init__(self, data):
         self.data = data
@@ -117,6 +120,7 @@ class Result:
     def parameters(self):
         Parameters = namedtuple('Parameters', self._parameters.keys())
         return Parameters(**self._parameters)
+
 
 class RoutingError(Exception):
     pass

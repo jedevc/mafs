@@ -1,13 +1,14 @@
-import os
 import errno
 import fuse
-import stat
 import inspect
-import time
+
 
 class FileReader:
     def create(contents, encoding):
-        for reader in [FileReader.Raw, FileReader.File, FileReader.Function, FileReader.Iterable]:
+        READERS = [FileReader.Raw, FileReader.File,
+                   FileReader.Function, FileReader.Iterable]
+
+        for reader in READERS:
             r = reader.create(contents, encoding)
             if r:
                 return r
@@ -37,7 +38,7 @@ class FileReader:
             if hasattr(contents, 'read') and hasattr(contents, 'write'):
                 return FileReader.File(contents, encoding)
 
-        def __init__(self, file, encoding = None):
+        def __init__(self, file, encoding=None):
             self.file = file
             self.encoding = encoding
 
@@ -166,8 +167,10 @@ class FileWriter:
         def release(self):
             self.file.close()
 
+
 class FileError(Exception):
     pass
+
 
 def _arg_count(func):
     return len(inspect.signature(func).parameters)

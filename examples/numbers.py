@@ -2,6 +2,7 @@ from mafs import MagicFS
 
 fs = MagicFS()
 
+
 @fs.read('/table')
 def numbers(path, ps):
     for i in range(10):
@@ -9,7 +10,9 @@ def numbers(path, ps):
             yield '{:>2} '.format(i * 10 + j)
         yield '\n'
 
+
 number = 5
+
 
 @fs.read('/multiple')
 def multiple_read(path, ps):
@@ -17,11 +20,13 @@ def multiple_read(path, ps):
         yield str(number + i * number) + ' '
     yield '\n'
 
+
 @fs.write('/multiple')
 def multiple_write(path, ps):
     def callback(contents):
         global number
         number = int(contents.strip())
     return callback
+
 
 fs.run()

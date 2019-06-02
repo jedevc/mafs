@@ -1,7 +1,7 @@
 import unittest
-import sys
 
 from mafs import router
+
 
 class RouterTests(unittest.TestCase):
     def test_add(self):
@@ -77,6 +77,7 @@ class RouterTests(unittest.TestCase):
         r.add('/baz', 'in baz')
 
         self.assertEqual(r.list('/').data, ['foo', 'bar', 'baz'])
+
 
 if __name__ == "__main__":
     unittest.main()

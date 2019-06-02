@@ -2,7 +2,6 @@ import fuse
 
 import os
 import stat
-import sys
 import errno
 
 from enum import Enum
@@ -12,6 +11,7 @@ import itertools
 
 from . import router
 from . import file
+
 
 class FileSystem(fuse.Operations):
     def __init__(self):
@@ -113,7 +113,8 @@ class FileSystem(fuse.Operations):
             contents = callback(path, reader.parameters)
 
             if contents:
-                self.readers[self.fh] = file.FileReader.create(contents, encoding)
+                r = file.FileReader.create(contents, encoding)
+                self.readers[self.fh] = r
 
             success = True
 
@@ -122,7 +123,8 @@ class FileSystem(fuse.Operations):
             contents = callback(path, writer.parameters)
 
             if contents:
-                self.writers[self.fh] = file.FileWriter.create(contents, encoding)
+                w = file.FileWriter.create(contents, encoding)
+                self.writers[self.fh] = w
 
             success = True
 
@@ -171,6 +173,7 @@ class FileSystem(fuse.Operations):
 
     def onlist(self, path, callback):
         self.routers[Method.LIST].add(path, callback)
+
 
 class Method(Enum):
     STAT = 0

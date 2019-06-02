@@ -1,10 +1,10 @@
 import fuse
 import stat
-import errno
 
 import argparse
 
 from . import filesystem
+
 
 class MagicFS:
     '''
@@ -22,13 +22,14 @@ class MagicFS:
     path /foo/bar. It can also contain variables, which have a colon prefixed,
     e.g. /foo/:var which matches any file in the directory /foo. Finally, it
     can contain recursive variables which match at least one directory, e.g.
-    /foo/*var, which matches any file in /foo, such as /foo/bar or /foo/bar/baz.
+    /foo/*var, which matches any file in /foo, such as /foo/bar or
+    /foo/bar/baz.
 
     Callbacks
     =========
-    Functions provided as callbacks should return different data types depending
-    on what kind of action they perform. For specific details, see the
-    documentatation for each callback register.
+    Functions provided as callbacks should return different data types
+    depending on what kind of action they perform. For specific details, see
+    the documentatation for each callback register.
     '''
 
     def __init__(self):
@@ -43,7 +44,7 @@ class MagicFS:
         '''
 
         fuse.FUSE(self.fs, mountpoint, raw_fi=True, nothreads=not threads,
-                foreground=foreground, default_permissions=True)
+                  foreground=foreground, default_permissions=True)
 
     def run(self):
         '''
@@ -67,11 +68,11 @@ class MagicFS:
         if not self._args:
             parser = argparse.ArgumentParser()
             parser.add_argument('mountpoint',
-                    help='folder to mount the filesystem in')
+                                help='folder to mount the filesystem in')
             parser.add_argument('-fg', '--foreground', action='store_true',
-                    help='run in the foreground')
+                                help='run in the foreground')
             parser.add_argument('-t', '--threads', action='store_true',
-                    help='allow the use of threads')
+                                help='allow the use of threads')
 
             for (args, kwargs) in self._user_args:
                 parser.add_argument(*args, **kwargs)
@@ -92,8 +93,8 @@ class MagicFS:
             - a string
             - an iterable (or generator)
             - a readable file object
-            - a function taking two parameters, length and offset, and returning
-              a byte string
+            - a function taking two parameters, length and offset, and
+              returning a byte string
         '''
 
         self.fs.onread(route, func, encoding)
@@ -232,6 +233,7 @@ class MagicFS:
             self.onreadlink(route, func)
             return func
         return decorator
+
 
 class FileType:
     '''

@@ -5,18 +5,23 @@ import pathlib
 
 fs = mafs.MagicFS()
 
-PREFIX = str(pathlib.Path.home())
-prefix = lambda f: os.path.join(PREFIX, f.strip('/'))
+
+def prefix(f):
+    PREFIX = str(pathlib.Path.home())
+    return os.path.join(PREFIX, f.strip('/'))
+
 
 @fs.read('*file', encoding=None)
 def read(path, ps):
     print('read', path)
     return open(prefix(path), 'rb')
 
+
 @fs.write('*file', encoding=None)
 def write(path, ps):
     print('write', path)
     return open(prefix(path), 'wb')
+
 
 @fs.stat('*file')
 def stat(path, ps):
@@ -34,10 +39,12 @@ def stat(path, ps):
         'st_ctime': stat.st_ctime
     }
 
+
 @fs.list('/')
 @fs.list('*file')
 def list(path, ps):
     print('list', path)
     return os.listdir(prefix(path))
+
 
 fs.run()
