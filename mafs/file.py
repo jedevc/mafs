@@ -4,7 +4,6 @@ import fuse
 import stat
 import inspect
 import time
-import itertools
 
 class FileReader:
     def create(contents, encoding):
@@ -136,9 +135,9 @@ class FileWriter:
 
         def write(self, data, offset):
             # extend cache size
-            ldiff = len(self.cache) - len(data)
-            if ldiff < 0:
-                self.cache.extend(itertools.count(-1, ldiff))
+            ldiff = len(data) - len(self.cache)
+            if ldiff > 0:
+                self.cache.extend([None] * ldiff)
 
             self.cache[offset:offset + len(data)] = data
             return len(data)
@@ -147,7 +146,7 @@ class FileWriter:
             try:
                 self.callback(bytes(self.cache).decode(self.encoding))
             except ValueError:
-                raise FuseOSError(errno.EIO)
+                raise fuse.FuseOSError(errno.EIO)
 
     class File:
         def create(contents, encoding):
